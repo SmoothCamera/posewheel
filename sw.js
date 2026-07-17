@@ -1,5 +1,5 @@
 /* Pose Wheel service worker: cache everything, run fully offline. */
-const CACHE = "posewheel-v2";
+const CACHE = "posewheel-v31";
 const ASSETS = [
   "./",
   "./index.html",

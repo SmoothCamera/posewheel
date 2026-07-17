@@ -55,7 +55,7 @@ section.on{display:block}
 .wrap{max-width:760px;margin:0 auto;width:100%}
 
 /* ---------- play controls ---------- */
-.playbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.playbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-start}
 .playbar select{
   background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:9px 12px;font-weight:700;font-size:15px;max-width:46vw;
@@ -66,13 +66,15 @@ section.on{display:block}
   color:var(--dim);font-weight:700;font-size:14px;white-space:nowrap;
 }
 .chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
+.male-toggle{margin-left:6px;border-color:rgba(139,92,246,.4);color:rgba(139,92,246,.6)}
+.male-toggle.on{background:rgba(139,92,246,.85);color:#fff;border-color:rgba(139,92,246,.9)}
 #counter{width:100%;text-align:center;color:var(--dim);font-size:13px;font-weight:600;letter-spacing:.04em}
 
 /* ---------- stage ---------- */
 .stage{position:relative;flex:1;min-height:0;display:grid;place-items:center}
 #wheel{touch-action:none;display:block}
 .pointer{
-  position:absolute;left:50%;transform:translateX(-50%);z-index:3;pointer-events:none;
+  position:absolute;left:50%;z-index:3;pointer-events:none;
   width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;
   border-top:26px solid #fff;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6));
 }
@@ -137,22 +139,38 @@ input[type=range]{width:100%;accent-color:var(--ok)}
 #poseTools input{flex:1}
 .plist{display:flex;flex-direction:column;gap:8px;max-width:760px;margin:0 auto}
 .prow{
-  position:relative;overflow:hidden;border-radius:14px;height:62px;width:100%;
-  display:flex;align-items:center;text-align:left;border:1px solid rgba(0,0,0,.25);
+  position:relative;overflow:hidden;border-radius:14px;min-height:90px;width:100%;
+  display:flex;align-items:stretch;text-align:left;border:1px solid var(--line);
+  background:var(--panel);cursor:pointer;transition:border-color .15s;
 }
-.prow .pimg{position:absolute;left:0;top:0;height:100%;width:46%;object-fit:cover}
-.prow .pfade{position:absolute;left:0;top:0;height:100%;width:47%}
-.prow .ptext{
-  position:relative;font-weight:800;font-size:16px;line-height:1.15;
-  margin-left:33%;padding-right:86px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+.prow:hover{border-color:rgba(255,255,255,.3)}
+.prow .pimg{position:absolute;left:0;top:0;height:100%;width:35%;object-fit:cover}
+.prow .pfade{position:absolute;left:0;top:0;height:100%;width:36%;background:linear-gradient(90deg,rgba(0,0,0,0),var(--panel))}
+.prow-body{
+  display:flex;flex-direction:column;justify-content:center;gap:4px;
+  margin-left:34%;padding:8px 8px 8px 4px;flex:1;min-width:0;position:relative;
 }
-.prow.noimg .ptext{margin-left:14px}
-.ptags{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;gap:4px}
-.ptags span{
-  background:rgba(0,0,0,.45);color:#fff;font-size:11px;font-weight:800;
-  padding:3px 7px;border-radius:999px;backdrop-filter:blur(2px);
+.prow.noimg .prow-body{margin-left:12px}
+.prow.archived{opacity:.5}
+.ptitle-edit{
+  font-weight:800;font-size:14px;line-height:1.15;color:#fff;
+  background:transparent;border:none;outline:none;padding:2px 4px;border-radius:6px;
+  width:100%;
 }
+.ptitle-edit:focus{background:rgba(255,255,255,.12)}
+.pdesc{font-size:11px;line-height:1.25;opacity:.6;color:#fff;padding:0 4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.prow-actions{display:flex;align-items:center;gap:2px;padding:0 4px}
+.ptags-inline{display:flex;gap:3px;flex-wrap:wrap}
+.itag{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-size:10px;font-weight:800;
+  padding:3px 6px;border-radius:999px;border:none;cursor:pointer;
+}
+.itag.on{background:rgba(255,255,255,.28);color:#fff}
+.parc-btn{
+  background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);font-size:13px;
+  padding:4px 7px;border-radius:8px;cursor:pointer;white-space:nowrap;
+}
+.parc-btn:active{color:#fff}
 
 /* ---------- wheels view ---------- */
 .wrow{width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -188,13 +206,16 @@ input[type=range]{width:100%;accent-color:var(--ok)}
 /* ---------- landing overlay ---------- */
 #landing{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:#050308}
 #landing.show{display:flex}
-#landImg{flex:1;min-height:0;width:100%;object-fit:contain;background:#050308}
-#landNoImg{flex:1;display:none;place-items:center;font-size:110px}
 #landText{
-  padding:22px 30px calc(26px + env(safe-area-inset-bottom));text-align:center;font-weight:800;line-height:1.18;
-  background:linear-gradient(rgba(5,3,8,0),rgba(5,3,8,.92) 40%);
+  padding:calc(12px + env(safe-area-inset-top)) 20px 10px;text-align:center;font-weight:900;line-height:1.1;
+  background:#050308;flex-shrink:0;
   text-shadow:0 2px 14px rgba(0,0,0,.8);
 }
+#landTitle{font-weight:900;line-height:1.1}
+#landDesc{font-weight:600;opacity:0;transition:opacity .8s ease;margin-top:10px;font-size:.85em;line-height:1.2}
+#landDesc.reveal{opacity:1}
+#landImg{flex:1;min-height:0;width:100%;object-fit:contain;background:#050308}
+#landNoImg{flex:1;display:none;place-items:center;font-size:110px}
 #landActions{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;display:flex;gap:8px}
 #landActions .btn{background:rgba(15,12,22,.75);backdrop-filter:blur(6px)}
 #confetti{position:fixed;inset:0;z-index:60;pointer-events:none}
@@ -236,7 +257,7 @@ body.present #exitPresent{display:block}
 <body>
 
 <header>
-  <div class="brand">✨ <b>Pose Wheel</b></div>
+  <div class="brand">✨ <b>Pose Wheel</b> <span style="font-size:11px;opacity:.5;font-weight:400">v31</span></div>
   <nav>
     <button data-view="play" class="on">Play</button>
     <button data-view="library">Poses</button>
@@ -253,17 +274,17 @@ body.present #exitPresent{display:block}
   <div class="playbar">
     <select id="wheelSel"></select>
     <div class="chips" id="filterChips">
-      <button class="chip on" data-f="all">All</button>
-      <button class="chip" data-f="1">Solo</button>
+      <button class="chip on" data-f="1">Solo</button>
       <button class="chip" data-f="2">Pair</button>
       <button class="chip" data-f="3">Group</button>
+      <button class="chip male-toggle" data-m="1" id="maleToggle">♂</button>
     </div>
-    <div id="counter"></div>
+    <div id="counter" style="margin-left:auto"></div>
   </div>
   <div class="stage" id="stage">
     <div class="pointer" id="pointerEl"></div>
     <canvas id="wheel"></canvas>
-    <button id="hub">SPIN</button>
+    <button id="hub"><span style="display:flex;flex-direction:column;align-items:center;line-height:1"><span style="font-size:.7em">▲</span>SPIN</span></button>
   </div>
   <button id="lastBar">
     <span id="lastThumb"></span>
@@ -279,6 +300,16 @@ body.present #exitPresent{display:block}
       <button class="btn" id="bulkPhotoBtn">📷 Bulk</button>
       <button class="btn primary" id="addPoseBtn">＋ Add</button>
       <input type="file" id="bulkPhotoFile" accept="image/*" multiple hidden>
+    </div>
+    <div class="chips" id="poseSortChips" style="margin-bottom:8px;flex-wrap:wrap">
+      <button class="chip on" data-ps="all">All</button>
+      <button class="chip" data-ps="1">Solo</button>
+      <button class="chip" data-ps="2">Pair</button>
+      <button class="chip" data-ps="3">Group</button>
+      <button class="chip" data-ps="1m">Solo ♂</button>
+      <button class="chip" data-ps="2m">Pair ♂</button>
+      <button class="chip" data-ps="3m">Group ♂</button>
+      <button class="chip" data-ps="arc">📦 Archived</button>
     </div>
     <div class="plist" id="poseList"></div>
     <p class="hint" style="margin-top:14px;text-align:center">Tap a pose to edit its text, photo, tags, colors, or which wheels it belongs to.</p>
@@ -306,6 +337,7 @@ body.present #exitPresent{display:block}
 
     <div class="card">
       <h2>Display</h2>
+      <canvas id="previewSlice" style="width:100%;height:70px;border-radius:10px;margin-bottom:8px;background:var(--panel)"></canvas>
       <div class="setrow">
         <div class="lab">Wheel text size</div>
         <input type="range" id="setWheelFont" min="10" max="26" step="1" style="flex:2">
@@ -316,8 +348,9 @@ body.present #exitPresent{display:block}
         <input type="range" id="setResultFont" min="24" max="88" step="2" style="flex:2">
         <output id="outResultFont"></output>
       </div>
+      <div id="previewResultText" style="background:var(--panel);border-radius:10px;padding:12px 14px;margin:-4px 0 8px;overflow:hidden;font-weight:900;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);line-height:1.1">Arched Back ✨</div>
       <div class="setrow">
-        <div class="lab">Spin length</div>
+        <div class="lab">Button spin length<small>Flick spins adjust with your finger speed</small></div>
         <input type="range" id="setSpinSec" min="2" max="9" step="0.5" style="flex:2">
         <output id="outSpinSec"></output>
       </div>
@@ -352,7 +385,8 @@ body.present #exitPresent{display:block}
         <button class="btn" id="importBtn" style="flex:1">Import backup</button>
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
-      <p class="hint" style="margin-top:10px">The backup file contains every pose, photo, wheel, and setting. Photos are embedded, so the file can be large. Import replaces everything currently saved.</p>
+      <p class="hint" style="margin-top:10px"><b>Export</b> = download a safety copy of everything. Do this right after you finish editing, every time.</p>
+      <p class="hint" style="margin-top:6px;color:#f0a"><b>Import ERASES everything here</b> and replaces it with the file you pick. Only import to restore a backup or move to a new device — never as a way to save.</p>
     </div>
 
     <div class="card">
@@ -385,7 +419,8 @@ body.present #exitPresent{display:block}
       <div class="tagchips">
         <button class="chip" data-t="1">Solo</button>
         <button class="chip" data-t="2">Pair</button>
-        <button class="chip" data-t="3">Group 3+</button>
+        <button class="chip" data-t="3">Group</button>
+        <button class="chip" data-t="4">♂</button>
       </div>
     </div>
 
@@ -401,8 +436,8 @@ body.present #exitPresent{display:block}
       </div>
       <input type="file" id="pmFile" accept="image/*" hidden>
       <canvas id="cropCv"></canvas>
-      <p class="hint" style="margin-top:8px">This preview is <b>only how the photo sits on the wheel slice</b>. Zoom, then drag to frame it. The full-size original is always what shows after a spin.</p>
-      <input type="range" id="pmZoom" min="1" max="3" step="0.01" style="margin-top:8px">
+      <p class="hint" style="margin-top:4px">Drag the preview to center the image on the wheel slice. The landing page always shows the full photo.</p>
+      <label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><span>Zoom</span><input type="range" id="pmZoom" min="1" max="3" step="0.01" style="flex:1"></label>
     </div>
 
     <div class="field">
@@ -431,9 +466,9 @@ body.present #exitPresent{display:block}
 
 <!-- ============ LANDING ============ -->
 <div id="landing">
+  <div id="landText"><div id="landTitle"></div><div id="landDesc"></div></div>
   <img id="landImg" alt="">
   <div id="landNoImg">✨</div>
-  <div id="landText"></div>
   <div id="landActions">
     <button class="btn small" id="landAgain">Spin again</button>
     <button class="btn small" id="landClose">✕</button>
@@ -545,7 +580,7 @@ const S = {
   cropTarget: null,     // pose draft being edited in modal
 };
 
-const DEFAULT_SETTINGS = { wheelFont:15, resultFont:46, spinSec:4.5, sound:true, vol:.8, fair:true };
+const DEFAULT_SETTINGS = { wheelFont:15, resultFont:56, spinSec:4.5, sound:true, vol:.8, fair:true };
 
 function newPose(text, tags, i){
   const bg = PALETTE[i % PALETTE.length];
@@ -567,9 +602,9 @@ function seedData(){
     order:  poses.map(p=>p.id),
     wheels: [],
     settings: {...DEFAULT_SETTINGS},
-    fair: {},
+    fair: {}, maleFilter: true,
     activeWheel: "all",
-    filter: "all",
+    filter: "3",
     last: null,
   };
   return { meta, poses };
@@ -604,7 +639,9 @@ async function loadAll(){
   if(S.meta){
     S.meta.settings = Object.assign({...DEFAULT_SETTINGS}, S.meta.settings||{});
     S.meta.wheels ||= []; S.meta.order ||= []; S.meta.fair ||= {};
-    S.meta.activeWheel ||= "all"; S.meta.filter ||= "all";
+    S.meta.activeWheel ||= "all"; S.meta.filter ||= "1";
+    // Migrate old "all" filter to a valid value
+    if(S.meta.filter === "all") S.meta.filter = "1";
     const keys = await store.list("pose:");
     let n = 0;
     for(const k of keys){
@@ -614,7 +651,7 @@ async function loadAll(){
       try{
         const p = JSON.parse(raw);
         p.crop ||= {s:1,x:0,y:0};
-        p.tags ||= [1,2,3];
+        p.tags ||= [1,2,3,4];
         S.poses.set(p.id, p);
       }catch(e){}
     }
@@ -642,10 +679,25 @@ function computePool(){
   const ids = w ? S.meta.order.filter(id=>w.poseIds.includes(id)) : [...S.meta.order];
   const f = S.meta.filter;
   S.pool = ids.map(id=>S.poses.get(id)).filter(Boolean)
-              .filter(p => f==="all" || (p.tags||[]).includes(+f));
+              .filter(p => {
+                if(p.archived) return false;
+                const tags = p.tags||[];
+                if(!tags.includes(+f)) return false;
+                if(S.meta.maleFilter && !tags.includes(4)) return false;
+                return true;
+              });
+  // In fair mode, remove already-seen poses from the wheel display
+  if(S.meta.settings.fair && S.pool.length > 1){
+    const key = fairKey();
+    let rem = (S.meta.fair[key]||[]).filter(id=>S.pool.some(p=>p.id===id));
+    if(rem.length > 0){
+      S.pool = S.pool.filter(p=>rem.includes(p.id));
+    }
+    // If remaining is empty, all have been seen - full pool shows (reshuffle)
+  }
   updateCounter();
 }
-const fairKey = () => S.meta.activeWheel + "|" + S.meta.filter;
+const fairKey = () => S.meta.activeWheel + "|" + S.meta.filter + (S.meta.maleFilter?"|m":"");
 function fairRemaining(){
   const ids = S.pool.map(p=>p.id);
   let rem = (S.meta.fair[fairKey()]||[]).filter(id=>ids.includes(id));
@@ -675,19 +727,43 @@ function poseImage(p){
   im = new Image();
   im._src = p.img;
   im.onload = () => requestDraw();
+  im.onerror = () => { console.warn("Image failed to decode for pose", p.id); requestDraw(); };
   im.src = p.img;
   imgCache.set(p.id, im);
   return im.complete ? im : null;
 }
-function drawCover(ctx, img, rx, ry, rw, rh, crop){
+function preloadImages(poses){
+  for(const p of poses){ if(p.img) poseImage(p); }
+}
+function drawCover(ctx, img, rx, ry, rw, rh, crop, wedge){
   const iw = img.naturalWidth, ih = img.naturalHeight;
   if(!iw || !ih) return;
-  const s  = Math.max(rw/iw, rh/ih) * (crop.s||1);
-  const dw = iw*s, dh = ih*s;
-  const mx = (dw-rw)/2, my = (dh-rh)/2;
-  const dx = rx + (rw-dw)/2 + clamp(crop.x||0,-1,1)*mx;
-  const dy = ry + (rh-dh)/2 + clamp(crop.y||0,-1,1)*my;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  const portrait = wedge && ih > iw * 1.2;
+  if(portrait){
+    // Rotate 90° CW so the tall image runs along the radial (wide) axis of the wedge.
+    // After rotation the image's height becomes horizontal (ew) and width becomes vertical (eh).
+    const ew = ih, eh = iw;
+    const s = Math.max(rw/ew, rh/eh) * (crop.s||1);
+    const dw = ew*s, dh = eh*s;
+    const mx = Math.max(0,(dw-rw)/2), my = Math.max(0,(dh-rh)/2);
+    // Gentle default bias toward the rim so the head (top of photo) sits outward,
+    // but not so much that it clips. User crop.x overrides.
+    const cx = (crop.x !== undefined && crop.x !== 0) ? crop.x : -0.25;
+    const dx = rx + (rw-dw)/2 + clamp(cx,-1,1)*mx;
+    const dy = ry + (rh-dh)/2 + clamp(crop.y||0,-1,1)*my;
+    ctx.save();
+    ctx.translate(dx + dw/2, dy + dh/2);
+    ctx.rotate(Math.PI/2);
+    ctx.drawImage(img, -dh/2, -dw/2, dh, dw);
+    ctx.restore();
+  } else {
+    const s = Math.max(rw/iw, rh/ih) * (crop.s||1);
+    const dw = iw*s, dh = ih*s;
+    const mx = Math.max(0,(dw-rw)/2), my = Math.max(0,(dh-rh)/2);
+    const dx = rx + (rw-dw)/2 + clamp(crop.x||0,-1,1)*mx;
+    const dy = ry + (rh-dh)/2 + clamp(crop.y||0,-1,1)*my;
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
 }
 function truncate(ctx, text, maxW){
   if(ctx.measureText(text).width <= maxW) return text;
@@ -721,8 +797,13 @@ function resizeWheel(){
   hub.style.fontSize = Math.round(G.hubR*0.42)+"px";
   const stageRect = stage.getBoundingClientRect();
   const cvTop = (stage.clientHeight - size)/2;
-  $("#pointerEl").style.top = Math.max(0, cvTop - 8) + "px";
   void stageRect;
+  // Position pointer tip at the top of the wheel rim, pointing down
+  const ptr = $("#pointerEl");
+  const rimTop = cvTop + size/2 - G.R;
+  ptr.style.top = (rimTop - 26) + "px";
+  ptr.style.left = "50%";
+  ptr.style.transform = "translateX(-50%)";
   requestDraw();
 }
 
@@ -756,38 +837,40 @@ function draw(){
     const p  = S.pool[i];
     const a0 = S.rot + i*slice, a1 = a0 + slice, mid = a0 + slice/2;
 
+    // 1. Fill entire wedge with black (this is the filler where photos don't reach)
     wedgePath(a0,a1);
-    ctx.fillStyle = p.bg; ctx.fill();
+    ctx.fillStyle = "#000"; ctx.fill();
 
-    const im = p.showImg ? poseImage(p) : null;
+    // 2. Draw photo covering the whole wedge, clipped to the wedge shape
+    let im = p.showImg ? poseImage(p) : null;
+    if(im && (!im.naturalWidth || !im.naturalHeight)) im = null; // guard: "complete" fires for broken images too
     if(im){
       ctx.save();
       wedgePath(a0,a1); ctx.clip();
       ctx.translate(G.cx,G.cy); ctx.rotate(mid);
-      const ir = G.hubR + (G.R-G.hubR)*0.44;
+      // Photo spans from hub to rim, full wedge height
+      const ir = G.hubR;
       const w  = G.R - ir;
       const h  = 2*G.R*Math.sin(slice/2) + 12;
-      drawCover(ctx, im, ir, -h/2, w, h, p.crop);
-      const grad = ctx.createLinearGradient(ir,0,ir+w*0.45,0);
-      grad.addColorStop(0, p.bg); grad.addColorStop(1, p.bg+"00");
-      ctx.fillStyle = grad;
-      ctx.fillRect(ir, -h/2, w*0.45, h);
+      drawCover(ctx, im, ir, -h/2, w, h, p.crop, true);
       ctx.restore();
     }
 
+    // 3. Draw text
     ctx.save();
     ctx.translate(G.cx,G.cy); ctx.rotate(mid);
-    ctx.font = `800 ${fs}px ui-rounded,-apple-system,system-ui,sans-serif`;
+    const tfs = Math.round(fs * 2.2);
+    ctx.font = `800 ${tfs}px ui-rounded,-apple-system,system-ui,sans-serif`;
     ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    ctx.fillStyle = p.tc;
-    ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 1;
-    ctx.fillText(truncate(ctx, p.text, G.R - G.hubR - 26), G.hubR + 12, 0);
+    ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(truncate(ctx, (p.text.split("\n")[0]), G.R - G.hubR - 20), G.hubR + 16, 0);
     ctx.restore();
   }
 
   // separators + rim
   ctx.save();
-  ctx.strokeStyle = "rgba(0,0,0,.3)"; ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 2;
   for(let i=0;i<n;i++){
     const a = S.rot + i*slice;
     ctx.beginPath();
@@ -795,7 +878,7 @@ function draw(){
     ctx.lineTo(G.cx + Math.cos(a)*G.R,        G.cy + Math.sin(a)*G.R);
     ctx.stroke();
   }
-  ctx.strokeStyle = "rgba(255,255,255,.1)"; ctx.lineWidth = 8;
+  ctx.strokeStyle = "rgba(255,255,255,.25)"; ctx.lineWidth = 6;
   ctx.beginPath(); ctx.arc(G.cx,G.cy,G.R-3,0,TAU); ctx.stroke();
   ctx.restore();
 }
@@ -917,35 +1000,68 @@ function pickTargetIndex(){
   return ids.indexOf(id);
 }
 
-function spin(energy=0.6, dir=1){
+function spin(energy=0.6, dir=1, buttonSpin=false){
   if(S.animating) return;
   if(S.pool.length === 0){ toast("No poses on this wheel"); return; }
   if(S.pool.length === 1){ land(0); return; }
 
   const T = pickTargetIndex();
   const n = S.pool.length, slice = TAU/n;
-  const f = 0.18 + Math.random()*0.64;
+  // Land closer to a slice boundary (peg) so it's suspenseful which side it settles.
+  // f near 0 or 1 = near a peg edge; bias toward the edges for drama.
+  const edgeBias = Math.random() < 0.5 ? 0.10 + Math.random()*0.18   // near leading peg
+                                       : 0.72 + Math.random()*0.18;  // near trailing peg
+  const f = edgeBias;
   const base = -Math.PI/2 - (T+f)*slice;
   const diffPos = ((base - S.rot) % TAU + TAU) % TAU;
-  const turns = 3 + Math.round(energy*5);
+  const turns = 2 + Math.round(energy*8);
   const delta = dir >= 0 ? (turns*TAU + diffPos)
                          : -(turns*TAU + (TAU - diffPos));
-  const dur = S.meta.settings.spinSec*1000 * (0.55 + 0.9*energy);
+  const dur = (buttonSpin ? S.meta.settings.spinSec : (1.5 + energy * 6)) * 1000;
   const r0 = S.rot, t0 = performance.now();
+  const rFinal = r0 + delta;
 
   S.animating = true;
   S.lastTickIdx = idxUnder(S.rot);
   whooshSound();
 
+  // Strong ease-out: fast start, long dramatic crawl at the end (quintic).
+  // Then a small peg settle: overshoot slightly and bounce back onto the slice.
+  const settleAmt = slice * 0.14; // how far it overshoots at the peg
+  const settleDur = 520;          // ms for the settle bounce
+
   (function frame(now){
-    const k = clamp((now-t0)/dur, 0, 1);
-    const e = 1 - Math.pow(1-k, 3);
-    S.rot = r0 + delta*e;
-    const idx = idxUnder(S.rot);
-    if(idx !== S.lastTickIdx){ S.lastTickIdx = idx; tickSound(); }
-    draw();
-    if(k < 1) requestAnimationFrame(frame);
-    else { S.animating = false; land(T); }
+    const elapsed = now - t0;
+    if(elapsed < dur){
+      const k = clamp(elapsed/dur, 0, 1);
+      // Quintic ease-out — slows down much sooner and crawls at the end
+      const e = 1 - Math.pow(1-k, 5);
+      S.rot = r0 + delta*e;
+      const idx = idxUnder(S.rot);
+      if(idx !== S.lastTickIdx){ S.lastTickIdx = idx; tickSound(); }
+      draw();
+      requestAnimationFrame(frame);
+    } else {
+      // Peg settle phase: damped bounce onto the final resting angle
+      const se = clamp((elapsed - dur)/settleDur, 0, 1);
+      if(se < 1){
+        // Damped sine: overshoots then settles to 0 offset
+        const damp = Math.pow(1-se, 2);
+        const offset = Math.sin(se * Math.PI * 2) * settleAmt * damp * dir;
+        S.rot = rFinal + offset;
+        const idx = idxUnder(S.rot);
+        if(idx !== S.lastTickIdx){ S.lastTickIdx = idx; tickSound(); }
+        draw();
+        requestAnimationFrame(frame);
+      } else {
+        S.rot = rFinal;
+        draw();
+        S.animating = false;
+        // Winner is whatever the pointer actually rests on after the settle
+        const finalIdx = idxUnder(S.rot);
+        land(finalIdx >= 0 ? finalIdx : T);
+      }
+    }
   })(t0);
 }
 
@@ -963,7 +1079,9 @@ function land(T){
   confetti();
   showLanding(p);
   renderLastBar();
-  updateCounter();
+  // Rebuild pool so used pose disappears from wheel in fair mode
+  computePool();
+  requestDraw();
 }
 
 /* ---------------- flick to spin ---------------- */
@@ -1009,20 +1127,28 @@ function land(T){
   };
   cv.addEventListener("pointerup", up);
   cv.addEventListener("pointercancel", up);
-  $("#hub").addEventListener("click", ()=>spin(0.5 + Math.random()*0.35, 1));
+  $("#hub").addEventListener("click", ()=>spin(0.5 + Math.random()*0.35, 1, true));
 })();
 
 /* =============================================================
    LANDING OVERLAY — always the ORIGINAL full-res photo + big text
    ============================================================= */
 function showLanding(p){
-  const ov = $("#landing"), img = $("#landImg"), no = $("#landNoImg"), tx = $("#landText");
+  const ov = $("#landing"), img = $("#landImg"), no = $("#landNoImg"), ttl = $("#landTitle"), desc = $("#landDesc");
   if(p.img){ img.src = p.img; img.style.display = "block"; no.style.display = "none"; }
   else     { img.removeAttribute("src"); img.style.display = "none"; no.style.display = "grid"; }
-  const len = p.text.length;
-  const scale = len > 130 ? .62 : len > 90 ? .75 : len > 60 ? .88 : 1;
-  tx.style.fontSize = Math.round(S.meta.settings.resultFont*scale) + "px";
-  tx.textContent = p.text;
+  const parts = p.text.split("\n");
+  const title = parts[0] || p.text;
+  const body = parts.slice(1).join(" ").trim();
+  const len = title.length;
+  const scale = len > 60 ? .75 : len > 35 ? .88 : 1;
+  ttl.style.fontSize = Math.round(S.meta.settings.resultFont * scale * 1.8) + "px";
+  ttl.textContent = title;
+  desc.textContent = body;
+  // Description nearly as large as title
+  desc.style.fontSize = Math.round(S.meta.settings.resultFont * scale * 0.9) + "px";
+  desc.classList.remove("reveal");
+  if(body) setTimeout(()=>desc.classList.add("reveal"), 1500);
   ov.classList.add("show");
 }
 $("#landing").addEventListener("click", ()=> $("#landing").classList.remove("show"));
@@ -1039,7 +1165,7 @@ function renderLastBar(){
   if(!p){ bar.classList.remove("show"); return; }
   $("#lastThumb").style.backgroundImage = p.img ? `url(${p.img})` : "none";
   $("#lastText").innerHTML = `Last: <b></b>`;
-  $("#lastText b").textContent = p.text;
+  $("#lastText b").textContent = p.text.split("\n")[0];
   bar.classList.add("show");
 }
 $("#lastBar").addEventListener("click", ()=>{
@@ -1050,30 +1176,93 @@ $("#lastBar").addEventListener("click", ()=>{
 /* =============================================================
    LIBRARY LIST
    ============================================================= */
+let poseSort = "all";
 function renderPoseList(){
   const q = $("#poseSearch").value.trim().toLowerCase();
   const wrap = $("#poseList");
   wrap.innerHTML = "";
-  const tagName = {1:"Solo",2:"Pair",3:"3+"};
-  for(const id of S.meta.order){
+  const tagName = {1:"Solo",2:"Pair",3:"Group",4:"♂"};
+  // Sort: active with photos first, active without photos, archived last
+  const sorted = [...S.meta.order].sort((a,b)=>{
+    const pa = S.poses.get(a), pb = S.poses.get(b);
+    if(!pa || !pb) return 0;
+    const aa = pa.archived?1:0, ab = pb.archived?1:0;
+    if(aa !== ab) return aa - ab;
+    if(pa.img && !pb.img) return -1;
+    if(!pa.img && pb.img) return 1;
+    return 0;
+  });
+  for(const id of sorted){
     const p = S.poses.get(id);
     if(!p) continue;
     if(q && !p.text.toLowerCase().includes(q)) continue;
-    const b = document.createElement("button");
-    b.className = "prow" + (p.img ? "" : " noimg");
-    b.style.background = p.bg;
-    b.style.setProperty("--rowbg", p.bg);
+    // Filter by sort chip
+    if(poseSort === "arc"){
+      if(!p.archived) continue;
+    } else if(poseSort !== "all"){
+      if(p.archived) continue;
+      const tags = p.tags||[];
+      if(poseSort.endsWith("m")){
+        if(!tags.includes(+poseSort.charAt(0)) || !tags.includes(4)) continue;
+      } else {
+        if(!tags.includes(+poseSort)) continue;
+      }
+    } else {
+      // "all" hides archived
+      if(p.archived) continue;
+    }
+    const parts = p.text.split("\n");
+    const title = parts[0] || p.text;
+    const desc = parts.slice(1).join(" ").trim();
+    const row = document.createElement("div");
+    row.className = "prow" + (p.img ? "" : " noimg") + (p.archived ? " archived" : "");
     let inner = "";
     if(p.img){
       inner += `<img class="pimg" src="${p.img}" alt="">`
-             + `<span class="pfade" style="background:linear-gradient(90deg,rgba(0,0,0,.12),${p.bg})"></span>`;
+             + `<span class="pfade"></span>`;
     }
-    inner += `<span class="ptext" style="color:${p.tc}"></span>`;
-    inner += `<span class="ptags">${(p.tags||[]).map(t=>`<span>${tagName[t]||t}</span>`).join("")}</span>`;
-    b.innerHTML = inner;
-    b.querySelector(".ptext").textContent = p.text;
-    b.addEventListener("click", ()=>openPoseModal(id));
-    wrap.appendChild(b);
+    inner += `<div class="prow-body">`;
+    inner += `<input class="ptitle-edit" value="">`;
+    if(desc) inner += `<div class="pdesc">${desc}</div>`;
+    inner += `<div class="prow-actions">`;
+    inner += `<span class="ptags-inline">`;
+    for(const t of [1,2,3,4]){
+      const on = (p.tags||[]).includes(t);
+      inner += `<button class="itag${on?" on":""}" data-t="${t}">${tagName[t]}</button>`;
+    }
+    inner += `</span>`;
+    inner += `<button class="parc-btn">${p.archived?"Restore":"📦"}</button>`;
+    inner += `</div></div>`;
+    row.innerHTML = inner;
+    // Whole card opens the editor when tapped (except on interactive controls)
+    row.addEventListener("click", ()=>openPoseModal(id));
+    const titleInput = row.querySelector(".ptitle-edit");
+    titleInput.value = title;
+    titleInput.addEventListener("change", e=>{
+      const pts = p.text.split("\n");
+      pts[0] = e.target.value.trim() || pts[0];
+      p.text = pts.join("\n");
+      savePose(p); requestDraw();
+    });
+    titleInput.addEventListener("click", e=>e.stopPropagation());
+    row.querySelectorAll(".itag").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        e.stopPropagation();
+        const tag = +btn.dataset.t;
+        const idx = (p.tags||[]).indexOf(tag);
+        if(idx===-1) p.tags.push(tag); else p.tags.splice(idx,1);
+        btn.classList.toggle("on");
+        savePose(p); computePool(); requestDraw();
+      });
+    });
+    row.querySelector(".parc-btn").addEventListener("click", e=>{
+      e.stopPropagation();
+      p.archived = !p.archived;
+      if(p.archived) S.meta.wheels.forEach(w=>{ const i=w.poseIds.indexOf(id); if(i!==-1) w.poseIds.splice(i,1); });
+      savePose(p); saveMeta(true); computePool(); requestDraw(); renderPoseList();
+      toast(p.archived ? "Archived" : "Restored to active");
+    });
+    wrap.appendChild(row);
   }
   if(!wrap.children.length){
     const d = document.createElement("p");
@@ -1084,6 +1273,13 @@ function renderPoseList(){
 }
 $("#poseSearch").addEventListener("input", renderPoseList);
 $("#addPoseBtn").addEventListener("click", ()=>openPoseModal(null));
+$$("#poseSortChips .chip").forEach(c=>{
+  c.addEventListener("click", ()=>{
+    poseSort = c.dataset.ps;
+    $$("#poseSortChips .chip").forEach(x=>x.classList.toggle("on", x.dataset.ps === poseSort));
+    renderPoseList();
+  });
+});
 
 /* ---------- Bulk photo import ---------- */
 $("#bulkPhotoBtn").addEventListener("click", ()=>$("#bulkPhotoFile").click());
@@ -1104,7 +1300,7 @@ $("#bulkPhotoFile").addEventListener("change", async e=>{
       if(url.length > 4_500_000) url = await fileToDataURL(f, 1400, 0.72);
       const label = f.name.replace(/\.[^.]+$/, "").replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
       const i = S.meta.order.length + created;
-      const p = newPose(label || `Pose ${i}`, [1,2,3], i);
+      const p = newPose(label || `Pose ${i}`, [1,2,3,4], i);
       p.img = url;
       S.poses.set(p.id, p);
       S.meta.order.push(p.id);
@@ -1161,7 +1357,7 @@ function openPoseModal(id){
     const p = S.poses.get(id);
     PM.draft = JSON.parse(JSON.stringify(p));
   }else{
-    PM.draft = newPose("", [1,2,3], S.meta.order.length);
+    PM.draft = newPose("", [1,2,3,4], S.meta.order.length);
   }
   $("#pmTitle").textContent = PM.isNew ? "New pose" : "Edit pose";
   $("#pmText").value = PM.draft.text;
@@ -1217,7 +1413,7 @@ function renderCrop(){
   if(PM.imEl && PM.draft.img){
     cctx.save(); path(); cctx.clip();
     cctx.translate(cx,cy);
-    const ir = hubR + (R-hubR)*0.44, w = R-ir, h = 2*R*Math.sin(wa/2)+12;
+    const ir = hubR + (R-hubR)*0.44, w = R-ir, h = 2*R*Math.sin(wa/2)+16;
     drawCover(cctx, PM.imEl, ir, -h/2, w, h, PM.draft.crop);
     const grad = cctx.createLinearGradient(ir,0,ir+w*0.45,0);
     grad.addColorStop(0, PM.draft.bg); grad.addColorStop(1, PM.draft.bg+"00");
@@ -1324,7 +1520,7 @@ $("#pmSave").addEventListener("click", async ()=>{
   if(!text){ toast("Give the pose some text first"); return; }
   PM.draft.text = text;
   let tags = $$("#poseModal .tagchips .chip").filter(c=>c.classList.contains("on")).map(c=>+c.dataset.t);
-  if(!tags.length) tags = [1,2,3];
+  if(!tags.length) tags = [1,2,3,4];
   PM.draft.tags = tags;
   const p = PM.draft;
   S.poses.set(p.id, p);
@@ -1441,18 +1637,51 @@ $("#wheelSel").addEventListener("change", e=>{
   saveMeta(); computePool(); requestDraw();
 });
 function setFilterChips(){
-  $$("#filterChips .chip").forEach(c=>c.classList.toggle("on", c.dataset.f === S.meta.filter));
+  $$("#filterChips .chip[data-f]").forEach(c=>c.classList.toggle("on", c.dataset.f === S.meta.filter));
+  $("#maleToggle").classList.toggle("on", !!S.meta.maleFilter);
 }
-$$("#filterChips .chip").forEach(c=>{
+$$("#filterChips .chip[data-f]").forEach(c=>{
   c.addEventListener("click", ()=>{
     S.meta.filter = c.dataset.f;
     setFilterChips(); saveMeta(); computePool(); requestDraw();
   });
 });
+$("#maleToggle").addEventListener("click", ()=>{
+  S.meta.maleFilter = !S.meta.maleFilter;
+  setFilterChips(); saveMeta(); computePool(); requestDraw();
+});
 
 /* =============================================================
    SETTINGS
    ============================================================= */
+function drawSlicePreview(){
+  const cv = $("#previewSlice");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = cv.getBoundingClientRect();
+  cv.width = rect.width * dpr; cv.height = rect.height * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  // Draw a sample wedge strip
+  const bg = "#8b5cf6";
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+  // Gradient like the real wheel
+  const grad = ctx.createLinearGradient(W*0.4, 0, W, 0);
+  grad.addColorStop(0, bg); grad.addColorStop(0.45, bg+"00");
+  ctx.fillStyle = "#222";
+  ctx.fillRect(W*0.4, 0, W*0.6, H);
+  ctx.fillStyle = grad;
+  ctx.fillRect(W*0.4, 0, W*0.6, H);
+  // Text at current size
+  const fs = S.meta.settings.wheelFont;
+  const tfs = Math.round(fs * 2.2);
+  ctx.font = `800 ${tfs}px ui-rounded,-apple-system,system-ui,sans-serif`;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = "#fff";
+  ctx.fillText("Arched Back ✨", 14, H/2);
+}
 function syncSettingsUI(){
   const s = S.meta.settings;
   $("#setWheelFont").value = s.wheelFont;   $("#outWheelFont").textContent = s.wheelFont;
@@ -1460,6 +1689,8 @@ function syncSettingsUI(){
   $("#setSpinSec").value = s.spinSec;       $("#outSpinSec").textContent = s.spinSec + "s";
   $("#setVol").value = s.vol;               $("#outVol").textContent = Math.round(s.vol*100) + "%";
   $("#setFair").checked = s.fair;
+  $("#previewResultText").style.fontSize = s.resultFont + "px";
+  drawSlicePreview();
   $("#setSound").checked = s.sound;
   const msgs = {
     claude: "Saving to your Claude account. Open this app in Claude on any of your devices and your wheels come with you.",
@@ -1468,26 +1699,40 @@ function syncSettingsUI(){
   };
   $("#storageModeMsg").textContent = msgs[store.mode];
 }
-$("#setWheelFont").addEventListener("input", e=>{ S.meta.settings.wheelFont = +e.target.value; $("#outWheelFont").textContent = e.target.value; saveMeta(); requestDraw(); });
-$("#setResultFont").addEventListener("input", e=>{ S.meta.settings.resultFont = +e.target.value; $("#outResultFont").textContent = e.target.value; saveMeta(); });
-$("#setSpinSec").addEventListener("input", e=>{ S.meta.settings.spinSec = +e.target.value; $("#outSpinSec").textContent = e.target.value + "s"; saveMeta(); });
+$("#setWheelFont").addEventListener("input", e=>{
+  S.meta.settings.wheelFont = +e.target.value;
+  $("#outWheelFont").textContent = e.target.value;
+  drawSlicePreview();
+  saveMeta(); requestDraw();
+});
+$("#setResultFont").addEventListener("input", e=>{
+  S.meta.settings.resultFont = +e.target.value;
+  $("#outResultFont").textContent = e.target.value;
+  $("#previewResultText").style.fontSize = e.target.value + "px";
+  saveMeta();
+});
 $("#setVol").addEventListener("input", e=>{ S.meta.settings.vol = +e.target.value; $("#outVol").textContent = Math.round(e.target.value*100)+"%"; saveMeta(); });
+$("#setSpinSec").addEventListener("input", e=>{ S.meta.settings.spinSec = +e.target.value; $("#outSpinSec").textContent = e.target.value + "s"; saveMeta(); });
 $("#setFair").addEventListener("change", e=>{ S.meta.settings.fair = e.target.checked; saveMeta(); updateCounter(); });
 $("#setSound").addEventListener("change", e=>{ S.meta.settings.sound = e.target.checked; saveMeta(); if(e.target.checked) tickSound(); });
 $("#resetFairBtn").addEventListener("click", ()=>{ S.meta.fair = {}; saveMeta(); updateCounter(); toast("Fair mode reset — everything's back in the pool"); });
 
 /* ----- export / import / wipe ----- */
 $("#exportBtn").addEventListener("click", ()=>{
+  const poses = [...S.poses.values()];
   const data = { app:"pose-wheel", v:1, exportedAt:new Date().toISOString(),
-                 meta:S.meta, poses:[...S.poses.values()] };
+                 meta:S.meta, poses };
   const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   const d = new Date(), pad = x=>String(x).padStart(2,"0");
-  a.download = `pose-wheel-backup-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  const photoCount = poses.filter(p=>p.img && !p.archived).length;
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}`;
+  a.download = `Glitter Poses ${dateStr} ${timeStr} ${photoCount}photos.json`;
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-  toast("Backup downloaded");
+  toast(`Backup downloaded (${photoCount} photos)`);
 });
 $("#importBtn").addEventListener("click", ()=>$("#importFile").click());
 $("#importFile").addEventListener("change", async e=>{
@@ -1499,7 +1744,11 @@ $("#importFile").addEventListener("change", async e=>{
   if(!data || data.app!=="pose-wheel" || !data.meta || !Array.isArray(data.poses)){
     toast("That file isn't a Pose Wheel backup"); return;
   }
-  if(!confirm(`Import ${data.poses.length} poses? This replaces everything currently saved.`)) return;
+  const msg = `This will ERASE everything currently in the app and replace it `
+            + `with the ${data.poses.length} poses from this file.\n\n`
+            + `Your current data will be gone unless you've exported it.\n\n`
+            + `Continue and replace everything?`;
+  if(!confirm(msg)) { toast("Import cancelled — nothing changed"); return; }
   $("#loading").style.display = "grid";
   $("#loadMsg").textContent = "Importing…";
   for(const k of await store.list("pose:")) await store.del(k);
@@ -1507,11 +1756,12 @@ $("#importFile").addEventListener("change", async e=>{
   S.meta = data.meta;
   S.meta.settings = Object.assign({...DEFAULT_SETTINGS}, S.meta.settings||{});
   S.meta.wheels ||= []; S.meta.fair ||= {};
-  S.meta.activeWheel ||= "all"; S.meta.filter ||= "all";
+  S.meta.activeWheel ||= "all"; S.meta.filter ||= "1";
+  if(S.meta.filter === "all") S.meta.filter = "1";
   let n = 0;
   for(const p of data.poses){
     n++; $("#loadMsg").textContent = `Importing pose ${n} of ${data.poses.length}…`;
-    p.crop ||= {s:1,x:0,y:0}; p.tags ||= [1,2,3];
+    p.crop ||= {s:1,x:0,y:0}; p.tags ||= [1,2,3,4];
     S.poses.set(p.id, p);
     await savePose(p);
   }
@@ -1575,6 +1825,7 @@ function refreshAll(){
   renderPoseList();
   renderWheels();
   renderLastBar();
+  preloadImages([...S.poses.values()]);
   computePool();
   requestDraw();
 }
