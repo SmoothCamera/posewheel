@@ -144,6 +144,142 @@ STEP 4 - Add to home screen
 
 
 ----------------------------------------
+  MOVING WORK BETWEEN iPAD AND MAC
+----------------------------------------
+
+Editing lots of text is much easier on the Mac. Here is exactly
+how to move your work back and forth. Follow every step.
+
+USE "IMPORT & MERGE" FOR THIS. Not Replace. Merge adds and updates
+without deleting anything, so you can't lose work by going the
+wrong direction.
+
+
+=== PART 1: GET YOUR WORK OFF THE iPAD ===
+
+  1. On the iPad, open Pose Wheel from the home screen icon.
+  2. Tap "Settings" in the top right.
+  3. Scroll down to the box labeled "Backup".
+  4. Tap the blue "Export backup" button.
+  5. A box appears asking where to save. Tap "Save to Files".
+  6. Choose a place you'll remember. "iCloud Drive" is best
+     because the Mac can see it too. Tap "Save" (top right).
+  7. The file is named something like:
+        Glitter Poses 2026-07-14 1728 35photos.json
+     The date, time, and photo count are in the name so you can
+     always tell which file is newest.
+
+
+=== PART 2: GET THE FILE ONTO THE MAC ===
+
+  Pick ONE of these two methods.
+
+  METHOD A - iCloud Drive (automatic, no clicking)
+  ------------------------------------------------
+  If you saved to iCloud Drive in Part 1:
+  1. On the Mac, open Finder.
+  2. In the left sidebar, click "iCloud Drive".
+  3. Your file is there. It may take a minute to appear.
+     If you see a little cloud icon on it, click the file once
+     to download it fully.
+
+  METHOD B - AirDrop (fast, manual)
+  ----------------------------------
+  1. On the iPad, open the "Files" app.
+  2. Find the file you just saved (check "Recents" at the bottom).
+  3. Press and HOLD your finger on the file until a menu appears.
+  4. Tap "Share".
+  5. Tap "AirDrop".
+  6. Your Mac's name appears as a circle. Tap it.
+  7. On the Mac, click "Accept" if it asks.
+  8. The file lands in your Mac's "Downloads" folder.
+
+
+=== PART 3: OPEN THE APP ON THE MAC AND LOAD THE FILE ===
+
+  1. On the Mac, open the app.
+     - If you installed it on GitHub, go to your link:
+           https://YOUR-USERNAME.github.io/posewheel/
+     - Bookmark this link. Use the SAME bookmark every time.
+  2. Click "Settings" in the top right.
+  3. Scroll to the "Backup" box.
+  4. Click "Import & Merge" (NOT "Import & Replace").
+  5. A file picker window opens. Find the file from Part 2
+     (look in Downloads or iCloud Drive). Click it, then "Open".
+  6. A message tells you how many poses will be added or updated.
+     Click "OK".
+  7. Wait for the progress bar. Your iPad work is now on the Mac.
+
+
+=== PART 4: DO YOUR EDITING ON THE MAC ===
+
+  Now you have a real keyboard. Copy and paste all you want.
+  - Click "Poses" at the top.
+  - Click any pose card to open it and edit the text.
+  - Add photos, change descriptions, fix tags.
+
+
+=== PART 5: SEND IT BACK TO THE iPAD ===
+
+  1. On the Mac, click "Settings".
+  2. Click the blue "Export backup" button.
+  3. The file goes to your Mac's "Downloads" folder automatically.
+     (Look for the newest file starting with "Glitter Poses".)
+
+  Now move it to the iPad. Pick ONE:
+
+  METHOD A - AirDrop (fastest)
+  -----------------------------
+  1. Open Finder, go to "Downloads".
+  2. Right-click the new "Glitter Poses" file.
+  3. Choose "Share", then "AirDrop".
+  4. Click your iPad when it appears.
+  5. On the iPad, tap "Accept".
+  6. It asks which app to open it with. Tap "Save to Files"
+     and put it in iCloud Drive or On My iPad.
+
+  METHOD B - iCloud Drive
+  ------------------------
+  1. Open Finder, go to "Downloads".
+  2. Drag the file into "iCloud Drive" in the sidebar.
+  3. Wait a minute for it to sync.
+
+  Then on the iPad:
+  1. Open Pose Wheel FROM THE HOME SCREEN ICON.
+  2. Tap "Settings".
+  3. Tap "Import & Merge".
+  4. Find and pick the file you just moved over.
+  5. Confirm. Done. Your Mac edits are now on the iPad.
+
+
+=== THE SHORT VERSION (once you've done it once) ===
+
+  iPad  -> Settings -> Export -> Save to Files (iCloud Drive)
+  Mac   -> Settings -> Import & Merge -> pick that file
+  Mac   -> edit everything with a real keyboard
+  Mac   -> Settings -> Export (goes to Downloads)
+  AirDrop that file to the iPad
+  iPad  -> Settings -> Import & Merge -> pick it
+
+  Always MERGE. Always export right after editing.
+
+
+=== IF SOMETHING LOOKS WRONG ===
+
+  "I don't see my new poses after merging"
+     Check you picked the newest file. The date and time are in
+     the filename. Newest = most recent date/time.
+
+  "It says nothing new in that file"
+     That file is identical to what's already there. You probably
+     picked an older export by mistake.
+
+  "I accidentally clicked Replace instead of Merge"
+     Import your most recent export to get back. This is why you
+     export often. Every export is a restore point.
+
+
+----------------------------------------
   WHAT EACH FILE IN THIS FOLDER IS
 ----------------------------------------
 

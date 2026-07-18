@@ -1,0 +1,1909 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Pose Wheel</title>
+<meta name="theme-color" content="#0d0b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pose Wheel">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<style>
+:root{
+  --ink:#0d0b12; --panel:#171420; --panel2:#1f1b2b; --line:#2e2840;
+  --text:#f7f4fd; --dim:#a89fc0; --danger:#ff5d73; --ok:#43dfa5;
+  --foil:conic-gradient(from 180deg,#ff5d9e,#ffb84d,#7bf07b,#4dd7ff,#b47bff,#ff5d9e);
+  --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:ui-rounded,-apple-system,"SF Pro Rounded","Segoe UI",Roboto,sans-serif;
+  background:var(--ink);color:var(--text);overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+}
+button,select,input,textarea{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+
+/* ---------- header ---------- */
+header{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  padding-top:calc(10px + env(safe-area-inset-top));
+  border-bottom:1px solid var(--line);background:var(--panel);
+}
+.brand{font-weight:800;font-size:19px;letter-spacing:-.02em;white-space:nowrap}
+.brand b{
+  background:var(--foil);background-size:300% 300%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:foil 9s linear infinite;
+}
+@keyframes foil{to{background-position:300% 300%}}
+nav{display:flex;gap:4px;margin-left:auto;background:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px}
+nav button{padding:8px 14px;border-radius:999px;color:var(--dim);font-weight:700;font-size:14px}
+nav button.on{background:var(--panel2);color:var(--text)}
+#presentBtn{font-weight:800;font-size:14px;padding:9px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+
+/* ---------- layout ---------- */
+main{height:calc(100% - 57px - env(safe-area-inset-top));overflow:hidden}
+section{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;display:none}
+section.on{display:block}
+#view-play{display:none;flex-direction:column;gap:10px;overflow:hidden}
+#view-play.on{display:flex}
+.wrap{max-width:760px;margin:0 auto;width:100%}
+
+/* ---------- play controls ---------- */
+.playbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-start}
+.playbar select{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:9px 12px;font-weight:700;font-size:15px;max-width:46vw;
+}
+.chips{display:flex;gap:6px}
+.chip{
+  padding:8px 13px;border-radius:999px;background:var(--panel);border:1px solid var(--line);
+  color:var(--dim);font-weight:700;font-size:14px;white-space:nowrap;
+}
+.chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
+.male-toggle{margin-left:6px;border-color:rgba(139,92,246,.4);color:rgba(139,92,246,.6)}
+.male-toggle.on{background:rgba(139,92,246,.85);color:#fff;border-color:rgba(139,92,246,.9)}
+#counter{width:100%;text-align:center;color:var(--dim);font-size:13px;font-weight:600;letter-spacing:.04em}
+
+/* ---------- stage ---------- */
+.stage{position:relative;flex:1;min-height:0;display:grid;place-items:center}
+#wheel{touch-action:none;display:block}
+.pointer{
+  position:absolute;left:50%;z-index:3;pointer-events:none;
+  width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;
+  border-top:26px solid #fff;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6));
+}
+#hub{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;
+  border-radius:50%;background:#0a0810;color:#fff;font-weight:800;letter-spacing:.02em;
+  display:grid;place-items:center;border:none;
+  box-shadow:0 0 0 5px rgba(255,255,255,.92),0 6px 24px rgba(0,0,0,.6);
+}
+#hub::before{
+  content:"";position:absolute;inset:-9px;border-radius:50%;z-index:-1;
+  background:var(--foil);background-size:300% 300%;animation:foil 9s linear infinite;
+  opacity:.9;
+}
+#hub:active{transform:translate(-50%,-50%) scale(.96)}
+
+/* ---------- last result bar ---------- */
+#lastBar{
+  display:none;align-items:center;gap:10px;width:100%;max-width:760px;margin:0 auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 12px;
+  text-align:left;
+}
+#lastBar.show{display:flex}
+#lastThumb{width:44px;height:44px;border-radius:10px;background:#000 center/cover no-repeat;flex:none;border:1px solid var(--line)}
+#lastText{flex:1;min-width:0;font-weight:700;font-size:14px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lastText b{color:var(--text)}
+
+/* ---------- generic ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:13px;
+  padding:11px 16px;font-weight:800;font-size:15px;min-height:46px;
+}
+.btn.primary{background:var(--text);color:var(--ink);border-color:var(--text)}
+.btn.danger{color:var(--danger);border-color:rgba(255,93,115,.4)}
+.btn.small{min-height:38px;padding:7px 12px;font-size:13px;border-radius:11px}
+.row{display:flex;gap:10px;align-items:center}
+.spread{justify-content:space-between}
+h2{font-size:17px;font-weight:800;margin:4px 0 10px}
+.hint{color:var(--dim);font-size:13px;line-height:1.5}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+input[type=text],input[type=search],textarea{
+  width:100%;background:var(--ink);border:1px solid var(--line);border-radius:12px;
+  padding:11px 13px;font-size:16px;-webkit-user-select:text;user-select:text;
+}
+textarea{min-height:74px;resize:vertical;line-height:1.35}
+input[type=range]{width:100%;accent-color:var(--ok)}
+.setrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.setrow:last-child{border-bottom:0}
+.setrow .lab{flex:1;font-weight:700;font-size:15px}
+.setrow .lab small{display:block;color:var(--dim);font-weight:600;font-size:12px;margin-top:2px}
+.setrow output{min-width:44px;text-align:right;font-weight:800;color:var(--ok)}
+.switch{position:relative;width:52px;height:31px;flex:none}
+.switch input{position:absolute;opacity:0;inset:0;z-index:1;width:100%;height:100%}
+.switch i{position:absolute;inset:0;border-radius:999px;background:var(--panel2);border:1px solid var(--line);transition:.15s}
+.switch i::after{content:"";position:absolute;top:2px;left:2px;width:25px;height:25px;border-radius:50%;background:#fff;transition:.15s}
+.switch input:checked+i{background:var(--ok);border-color:var(--ok)}
+.switch input:checked+i::after{left:23px}
+
+/* ---------- pose list ---------- */
+#poseTools{display:flex;gap:8px;margin-bottom:12px}
+#poseTools input{flex:1}
+.plist{display:flex;flex-direction:column;gap:8px;max-width:760px;margin:0 auto}
+.prow{
+  position:relative;overflow:hidden;border-radius:14px;min-height:90px;width:100%;
+  display:flex;align-items:stretch;text-align:left;border:1px solid var(--line);
+  background:var(--panel);cursor:pointer;transition:border-color .15s;
+}
+.prow:hover{border-color:rgba(255,255,255,.3)}
+.prow .pimg{position:absolute;left:0;top:0;height:100%;width:35%;object-fit:cover}
+.prow .pfade{position:absolute;left:0;top:0;height:100%;width:36%;background:linear-gradient(90deg,rgba(0,0,0,0),var(--panel))}
+.prow-body{
+  display:flex;flex-direction:column;justify-content:center;gap:4px;
+  margin-left:34%;padding:8px 8px 8px 4px;flex:1;min-width:0;position:relative;
+}
+.prow.noimg .prow-body{margin-left:12px}
+.prow.archived{opacity:.5}
+.ptitle-edit{
+  font-weight:800;font-size:14px;line-height:1.15;color:#fff;
+  background:transparent;border:none;outline:none;padding:2px 4px;border-radius:6px;
+  width:100%;
+}
+.ptitle-edit:focus{background:rgba(255,255,255,.12)}
+.pdesc{font-size:11px;line-height:1.25;opacity:.6;color:#fff;padding:0 4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.prow-actions{display:flex;align-items:center;gap:2px;padding:0 4px}
+.ptags-inline{display:flex;gap:3px;flex-wrap:wrap}
+.itag{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-size:10px;font-weight:800;
+  padding:3px 6px;border-radius:999px;border:none;cursor:pointer;
+}
+.itag.on{background:rgba(255,255,255,.28);color:#fff}
+.parc-btn{
+  background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);font-size:13px;
+  padding:4px 7px;border-radius:8px;cursor:pointer;white-space:nowrap;
+}
+.parc-btn:active{color:#fff}
+
+/* ---------- wheels view ---------- */
+.wrow{width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.wrow b{font-size:16px}
+.wrow .cnt{color:var(--dim);font-weight:700;font-size:13px}
+.wcheck{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px}
+.wcheck:last-child{border-bottom:0}
+.wcheck input{width:22px;height:22px;accent-color:var(--ok);flex:none}
+.wcheck .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- swatches / tag chips ---------- */
+.swrow{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent;flex:none}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--ink),0 0 0 4px #fff3}
+.tagchips{display:flex;gap:8px}
+.tagchips .chip{font-size:15px;padding:9px 16px}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,4,10,.72);backdrop-filter:blur(4px)}
+.modal.show{display:grid;place-items:center;padding:16px}
+.sheet{
+  width:100%;max-width:620px;max-height:calc(100% - 20px);overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;
+  -webkit-overflow-scrolling:touch;
+}
+.sheet h3{font-size:18px;font-weight:800;margin-bottom:12px}
+.field{margin-bottom:16px}
+.field>.flab{font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:block}
+.sheet .foot{display:flex;gap:10px;margin-top:6px}
+.sheet .foot .btn{flex:1}
+#cropCv{width:100%;height:150px;border-radius:12px;background:var(--ink);border:1px solid var(--line);touch-action:none;display:block}
+
+/* ---------- landing overlay ---------- */
+#landing{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:#050308}
+#landing.show{display:flex}
+#landText{
+  padding:calc(12px + env(safe-area-inset-top)) 20px 10px;text-align:center;font-weight:900;line-height:1.1;
+  background:#050308;flex-shrink:0;
+  text-shadow:0 2px 14px rgba(0,0,0,.8);
+}
+#landTitle{font-weight:900;line-height:1.1}
+#landDesc{font-weight:600;opacity:0;transition:opacity .8s ease;margin-top:10px;font-size:.85em;line-height:1.2}
+#landDesc.reveal{opacity:1}
+#landImg{flex:1;min-height:0;width:100%;object-fit:contain;background:#050308}
+#landNoImg{flex:1;display:none;place-items:center;font-size:110px}
+#landActions{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;display:flex;gap:8px}
+#landActions .btn{background:rgba(15,12,22,.75);backdrop-filter:blur(6px)}
+#confetti{position:fixed;inset:0;z-index:60;pointer-events:none}
+
+/* ---------- toast / loading ---------- */
+#toast{
+  position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:var(--ink);font-weight:800;font-size:14px;
+  padding:11px 18px;border-radius:999px;opacity:0;transition:.22s;z-index:70;pointer-events:none;
+  max-width:86vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#loading{position:fixed;inset:0;z-index:80;background:var(--ink);display:grid;place-items:center}
+#loading .inner{text-align:center}
+#loading .spin{
+  width:52px;height:52px;border-radius:50%;margin:0 auto 14px;
+  background:var(--foil);background-size:300% 300%;animation:foil 2.2s linear infinite;
+  -webkit-mask:radial-gradient(farthest-side,transparent 62%,#000 64%);
+  mask:radial-gradient(farthest-side,transparent 62%,#000 64%);
+}
+#loadMsg{color:var(--dim);font-weight:700;font-size:14px}
+
+/* ---------- present mode ---------- */
+body.present header,body.present .playbar,body.present #counter{display:none}
+body.present main{height:calc(100% - env(safe-area-inset-top))}
+body.present #view-play{padding-top:calc(14px + env(safe-area-inset-top))}
+#exitPresent{
+  position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px;z-index:45;display:none;
+  width:42px;height:42px;border-radius:50%;background:rgba(15,12,22,.7);border:1px solid var(--line);
+  color:var(--dim);font-size:18px;font-weight:800;backdrop-filter:blur(6px);
+}
+body.present #exitPresent{display:block}
+
+@media (prefers-reduced-motion:reduce){
+  .brand b,#hub::before,#loading .spin{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">✨ <b>Pose Wheel</b> <span style="font-size:11px;opacity:.5;font-weight:400">v32</span></div>
+  <nav>
+    <button data-view="play" class="on">Play</button>
+    <button data-view="library">Poses</button>
+    <button data-view="wheels">Wheels</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+  <button id="presentBtn">Present</button>
+</header>
+
+<main>
+
+<!-- ============ PLAY ============ -->
+<section id="view-play" class="on">
+  <div class="playbar">
+    <select id="wheelSel"></select>
+    <div class="chips" id="filterChips">
+      <button class="chip on" data-f="1">Solo</button>
+      <button class="chip" data-f="2">Pair</button>
+      <button class="chip" data-f="3">Group</button>
+      <button class="chip male-toggle" data-m="1" id="maleToggle">♂</button>
+    </div>
+    <div id="counter" style="margin-left:auto"></div>
+  </div>
+  <div class="stage" id="stage">
+    <div class="pointer" id="pointerEl"></div>
+    <canvas id="wheel"></canvas>
+    <button id="hub"><span style="display:flex;flex-direction:column;align-items:center;line-height:1"><span style="font-size:.7em">▲</span>SPIN</span></button>
+  </div>
+  <button id="lastBar">
+    <span id="lastThumb"></span>
+    <span id="lastText"></span>
+  </button>
+</section>
+
+<!-- ============ LIBRARY ============ -->
+<section id="view-library">
+  <div class="wrap">
+    <div id="poseTools">
+      <input type="search" id="poseSearch" placeholder="Search poses…">
+      <button class="btn" id="bulkPhotoBtn">📷 Bulk</button>
+      <button class="btn primary" id="addPoseBtn">＋ Add</button>
+      <input type="file" id="bulkPhotoFile" accept="image/*" multiple hidden>
+    </div>
+    <div class="chips" id="poseSortChips" style="margin-bottom:8px;flex-wrap:wrap">
+      <button class="chip on" data-ps="all">All</button>
+      <button class="chip" data-ps="1">Solo</button>
+      <button class="chip" data-ps="2">Pair</button>
+      <button class="chip" data-ps="3">Group</button>
+      <button class="chip" data-ps="1m">Solo ♂</button>
+      <button class="chip" data-ps="2m">Pair ♂</button>
+      <button class="chip" data-ps="3m">Group ♂</button>
+      <button class="chip" data-ps="arc">📦 Archived</button>
+    </div>
+    <div class="plist" id="poseList"></div>
+    <p class="hint" style="margin-top:14px;text-align:center">Tap a pose to edit its text, photo, tags, colors, or which wheels it belongs to.</p>
+  </div>
+</section>
+
+<!-- ============ WHEELS ============ -->
+<section id="view-wheels">
+  <div class="wrap">
+    <div class="card">
+      <h2>Wheels</h2>
+      <p class="hint" style="margin-bottom:12px">Every pose lives in one master library. A wheel is just a named selection from it, so one pose can be on several wheels. “All poses” always contains everything.</p>
+      <div class="row">
+        <input type="text" id="newWheelName" placeholder="New wheel name…">
+        <button class="btn primary" id="addWheelBtn">Create</button>
+      </div>
+    </div>
+    <div id="wheelList"></div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="view-settings">
+  <div class="wrap">
+
+    <div class="card">
+      <h2>Display</h2>
+      <canvas id="previewSlice" style="width:100%;height:70px;border-radius:10px;margin-bottom:8px;background:var(--panel)"></canvas>
+      <div class="setrow">
+        <div class="lab">Wheel text size</div>
+        <input type="range" id="setWheelFont" min="10" max="26" step="1" style="flex:2">
+        <output id="outWheelFont"></output>
+      </div>
+      <div class="setrow">
+        <div class="lab">Result text size<small>The big text after landing</small></div>
+        <input type="range" id="setResultFont" min="24" max="88" step="2" style="flex:2">
+        <output id="outResultFont"></output>
+      </div>
+      <div id="previewResultText" style="background:var(--panel);border-radius:10px;padding:12px 14px;margin:-4px 0 8px;overflow:hidden;font-weight:900;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);line-height:1.1">Arched Back ✨</div>
+      <div class="setrow">
+        <div class="lab">Button spin length<small>Flick spins adjust with your finger speed</small></div>
+        <input type="range" id="setSpinSec" min="2" max="9" step="0.5" style="flex:2">
+        <output id="outSpinSec"></output>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Game</h2>
+      <div class="setrow">
+        <div class="lab">Fair mode<small>No pose repeats until the whole pool has been used</small></div>
+        <label class="switch"><input type="checkbox" id="setFair"><i></i></label>
+      </div>
+      <div class="setrow">
+        <div class="lab">Reset fair mode<small>Puts every pose back in the pool</small></div>
+        <button class="btn small" id="resetFairBtn">Reset</button>
+      </div>
+      <div class="setrow">
+        <div class="lab">Sounds</div>
+        <label class="switch"><input type="checkbox" id="setSound"><i></i></label>
+      </div>
+      <div class="setrow">
+        <div class="lab">Volume</div>
+        <input type="range" id="setVol" min="0" max="1" step="0.05" style="flex:2">
+        <output id="outVol"></output>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="hint" style="margin-bottom:12px" id="storageModeMsg"></p>
+      <div class="row">
+        <button class="btn primary" id="exportBtn" style="flex:1">⬇︎ Export backup</button>
+      </div>
+      <p class="hint" style="margin-top:10px;margin-bottom:14px"><b>Export</b> downloads a copy of everything. Do this right after you finish editing, every time.</p>
+      <div class="row">
+        <button class="btn" id="mergeBtn" style="flex:1">⇄ Import &amp; Merge</button>
+        <button class="btn" id="importBtn" style="flex:1">⚠︎ Import &amp; Replace</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+        <input type="file" id="mergeFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="hint" style="margin-top:10px"><b>Merge</b> (safe, use this one): adds new poses from the file and updates ones you changed. Nothing gets deleted. Best for moving edits between your Mac and iPad.</p>
+      <p class="hint" style="margin-top:6px;color:#f0a"><b>Replace</b> erases everything here first. Only for restoring a backup or setting up a brand new device.</p>
+    </div>
+
+    <div class="card">
+      <h2>Presenting on a TV</h2>
+      <p class="hint">Mirror the iPad screen with AirPlay (Control Center → Screen Mirroring), then tap <b>Present</b> to hide the controls. The screen stays awake while presenting.</p>
+    </div>
+
+    <div class="card">
+      <h2>Danger zone</h2>
+      <button class="btn danger" id="wipeBtn">Delete everything</button>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<!-- ============ POSE MODAL ============ -->
+<div class="modal" id="poseModal">
+  <div class="sheet">
+    <h3 id="pmTitle">Edit pose</h3>
+
+    <div class="field">
+      <label class="flab" for="pmText">Prompt text</label>
+      <textarea id="pmText" placeholder="e.g. Back to back, arms crossed"></textarea>
+    </div>
+
+    <div class="field">
+      <span class="flab">Works for</span>
+      <div class="tagchips">
+        <button class="chip" data-t="1">Solo</button>
+        <button class="chip" data-t="2">Pair</button>
+        <button class="chip" data-t="3">Group</button>
+        <button class="chip" data-t="4">♂</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="flab">Photo</span>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn small" id="pmPickImg">Choose photo</button>
+        <button class="btn small danger" id="pmRemoveImg">Remove</button>
+        <label class="row" style="margin-left:auto;gap:8px;font-weight:700;font-size:14px">
+          On wheel
+          <span class="switch"><input type="checkbox" id="pmShowImg"><i></i></span>
+        </label>
+      </div>
+      <input type="file" id="pmFile" accept="image/*" hidden>
+      <canvas id="cropCv"></canvas>
+      <p class="hint" style="margin-top:4px">Drag the preview to center the image on the wheel slice. The landing page always shows the full photo.</p>
+      <label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><span>Zoom</span><input type="range" id="pmZoom" min="1" max="3" step="0.01" style="flex:1"></label>
+    </div>
+
+    <div class="field">
+      <span class="flab">Slice color</span>
+      <div class="swrow" id="pmBgRow"></div>
+    </div>
+
+    <div class="field">
+      <span class="flab">Text color</span>
+      <div class="swrow" id="pmTcRow"></div>
+    </div>
+
+    <div class="field">
+      <span class="flab">On wheels</span>
+      <div id="pmWheels"></div>
+      <p class="hint" id="pmWheelsHint" style="margin-top:6px">Always included in “All poses”. Create more wheels in the Wheels tab.</p>
+    </div>
+
+    <div class="foot">
+      <button class="btn danger" id="pmDelete">Delete</button>
+      <button class="btn" id="pmCancel">Cancel</button>
+      <button class="btn primary" id="pmSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LANDING ============ -->
+<div id="landing">
+  <div id="landText"><div id="landTitle"></div><div id="landDesc"></div></div>
+  <img id="landImg" alt="">
+  <div id="landNoImg">✨</div>
+  <div id="landActions">
+    <button class="btn small" id="landAgain">Spin again</button>
+    <button class="btn small" id="landClose">✕</button>
+  </div>
+</div>
+
+<canvas id="confetti" hidden></canvas>
+<button id="exitPresent">✕</button>
+<div id="toast"></div>
+<div id="loading"><div class="inner"><div class="spin"></div><div id="loadMsg">Loading…</div></div></div>
+
+<script>
+"use strict";
+/* =============================================================
+   Pose Wheel — party pose spinner
+   - Master pose library + named wheels + subject-count filters
+   - Wheel crop settings NEVER touch the full-size landing photo
+   ============================================================= */
+
+const TAU = Math.PI * 2;
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+const PALETTE = ["#ef4444","#f97316","#f59e0b","#eab308","#84cc16","#22c55e",
+                 "#10b981","#14b8a6","#06b6d4","#0ea5e9","#3b82f6","#6366f1",
+                 "#8b5cf6","#a855f7","#d946ef","#ec4899"];
+
+function luminance(hex){
+  const n = parseInt(hex.slice(1),16);
+  const r=(n>>16&255)/255, g=(n>>8&255)/255, b=(n&255)/255;
+  return .2126*r + .7152*g + .0722*b;
+}
+const autoText = bg => luminance(bg) > .55 ? "#141414" : "#ffffff";
+
+/* ---------------- toast ---------------- */
+let toastTimer = null;
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* =============================================================
+   STORAGE — Claude artifact storage → IndexedDB → memory
+   Same async API either way: get/set/del/list (strings in/out)
+   ============================================================= */
+function makeClaudeStore(){
+  return {
+    mode: "claude",
+    async get(k){ try{ const r = await window.storage.get(k, false); return r ? r.value : null; }catch(e){ return null; } },
+    async set(k,v){ try{ await window.storage.set(k, v, false); }catch(e){ console.error(e); toast("Save failed — storage error"); } },
+    async del(k){ try{ await window.storage.delete(k, false); }catch(e){} },
+    async list(p){ try{ const r = await window.storage.list(p, false); return r ? (r.keys||[]) : []; }catch(e){ return []; } },
+  };
+}
+function makeIdbStore(){
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res,rej)=>{
+    const rq = indexedDB.open("posewheel", 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore("kv");
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror   = () => rej(rq.error);
+  }));
+  const tx = async (m, fn) => {
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const t = db.transaction("kv", m), st = t.objectStore("kv");
+      const rq = fn(st);
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror   = () => rej(rq.error);
+    });
+  };
+  return {
+    mode: "idb",
+    async get(k){ try{ const v = await tx("readonly", st=>st.get(k)); return v===undefined ? null : v; }catch(e){ return null; } },
+    async set(k,v){ try{ await tx("readwrite", st=>st.put(v,k)); }catch(e){ console.error(e); toast("Save failed — storage error"); } },
+    async del(k){ try{ await tx("readwrite", st=>st.delete(k)); }catch(e){} },
+    async list(p){ try{ const keys = await tx("readonly", st=>st.getAllKeys()); return keys.filter(k=>String(k).startsWith(p)); }catch(e){ return []; } },
+  };
+}
+function makeMemStore(){
+  const m = new Map();
+  return {
+    mode: "mem",
+    async get(k){ return m.has(k) ? m.get(k) : null; },
+    async set(k,v){ m.set(k,v); },
+    async del(k){ m.delete(k); },
+    async list(p){ return [...m.keys()].filter(k=>k.startsWith(p)); },
+  };
+}
+const store = (typeof window.storage === "object" && window.storage && typeof window.storage.set === "function")
+  ? makeClaudeStore()
+  : (window.indexedDB ? makeIdbStore() : makeMemStore());
+
+/* =============================================================
+   STATE
+   ============================================================= */
+const S = {
+  meta:  null,          // {v, order[], wheels[], settings{}, fair{}, activeWheel, filter, last}
+  poses: new Map(),     // id -> pose
+  pool:  [],            // pose objects on the current wheel view
+  rot:   0,
+  animating: false,
+  lastTickIdx: -1,
+  cropTarget: null,     // pose draft being edited in modal
+};
+
+const DEFAULT_SETTINGS = { wheelFont:15, resultFont:56, spinSec:4.5, sound:true, vol:.8, fair:true };
+
+function newPose(text, tags, i){
+  const bg = PALETTE[i % PALETTE.length];
+  return { id: uid()+i, text, tags, bg, tc: autoText(bg),
+           img: null, showImg: true, crop: { s:1, x:0, y:0 } };
+}
+function seedData(){
+  const samples = [
+    ["Superhero landing 🦸",            [1]],
+    ["Look back over your shoulder",    [1]],
+    ["Prom pose with your “date”",      [2]],
+    ["Back to back, arms crossed",      [2]],
+    ["Trust fall — lean way back",      [2,3]],
+    ["Group hug, everyone in 🤗",       [3]],
+  ];
+  const poses = samples.map((s,i)=>newPose(s[0], s[1], i*3));
+  const meta = {
+    v:1,
+    order:  poses.map(p=>p.id),
+    wheels: [],
+    settings: {...DEFAULT_SETTINGS},
+    fair: {}, maleFilter: true,
+    activeWheel: "all",
+    filter: "3",
+    last: null,
+  };
+  return { meta, poses };
+}
+
+/* ---------------- persistence ---------------- */
+let metaTimer = null;
+function saveMeta(now=false){
+  clearTimeout(metaTimer);
+  const doIt = () => store.set("meta", JSON.stringify(S.meta));
+  if(now) return doIt();
+  metaTimer = setTimeout(doIt, 350);
+}
+const savePose = p => store.set("pose:"+p.id, JSON.stringify(p));
+
+async function deletePoseEverywhere(id){
+  await store.del("pose:"+id);
+  S.poses.delete(id);
+  S.meta.order = S.meta.order.filter(x=>x!==id);
+  S.meta.wheels.forEach(w => w.poseIds = w.poseIds.filter(x=>x!==id));
+  for(const k in S.meta.fair) S.meta.fair[k] = S.meta.fair[k].filter(x=>x!==id);
+  if(S.meta.last === id) S.meta.last = null;
+  saveMeta(true);
+}
+
+async function loadAll(){
+  const msg = $("#loadMsg");
+  const rawMeta = await store.get("meta");
+  if(rawMeta){
+    try{ S.meta = JSON.parse(rawMeta); }catch(e){ S.meta = null; }
+  }
+  if(S.meta){
+    S.meta.settings = Object.assign({...DEFAULT_SETTINGS}, S.meta.settings||{});
+    S.meta.wheels ||= []; S.meta.order ||= []; S.meta.fair ||= {};
+    S.meta.activeWheel ||= "all"; S.meta.filter ||= "1";
+    // Migrate old "all" filter to a valid value
+    if(S.meta.filter === "all") S.meta.filter = "1";
+    const keys = await store.list("pose:");
+    let n = 0;
+    for(const k of keys){
+      n++; if(n % 5 === 0) msg.textContent = `Loading pose ${n} of ${keys.length}…`;
+      const raw = await store.get(k);
+      if(!raw) continue;
+      try{
+        const p = JSON.parse(raw);
+        p.crop ||= {s:1,x:0,y:0};
+        p.tags ||= [1,2,3,4];
+        S.poses.set(p.id, p);
+      }catch(e){}
+    }
+    // drop dangling ids
+    S.meta.order = S.meta.order.filter(id=>S.poses.has(id));
+    for(const id of S.poses.keys()) if(!S.meta.order.includes(id)) S.meta.order.push(id);
+  }else{
+    msg.textContent = "Setting up your library…";
+    const seed = seedData();
+    S.meta = seed.meta;
+    for(const p of seed.poses){ S.poses.set(p.id, p); await savePose(p); }
+    await saveMeta(true);
+  }
+}
+
+/* =============================================================
+   POOL — active wheel ∩ subject filter
+   ============================================================= */
+function activeWheelObj(){
+  return S.meta.activeWheel === "all" ? null
+       : S.meta.wheels.find(w=>w.id===S.meta.activeWheel) || null;
+}
+function computePool(){
+  const w = activeWheelObj();
+  const ids = w ? S.meta.order.filter(id=>w.poseIds.includes(id)) : [...S.meta.order];
+  const f = S.meta.filter;
+  S.pool = ids.map(id=>S.poses.get(id)).filter(Boolean)
+              .filter(p => {
+                if(p.archived) return false;
+                const tags = p.tags||[];
+                if(!tags.includes(+f)) return false;
+                if(S.meta.maleFilter && !tags.includes(4)) return false;
+                return true;
+              });
+  // In fair mode, remove already-seen poses from the wheel display
+  if(S.meta.settings.fair && S.pool.length > 1){
+    const key = fairKey();
+    let rem = (S.meta.fair[key]||[]).filter(id=>S.pool.some(p=>p.id===id));
+    if(rem.length > 0){
+      S.pool = S.pool.filter(p=>rem.includes(p.id));
+    }
+    // If remaining is empty, all have been seen - full pool shows (reshuffle)
+  }
+  updateCounter();
+}
+const fairKey = () => S.meta.activeWheel + "|" + S.meta.filter + (S.meta.maleFilter?"|m":"");
+function fairRemaining(){
+  const ids = S.pool.map(p=>p.id);
+  let rem = (S.meta.fair[fairKey()]||[]).filter(id=>ids.includes(id));
+  return rem;
+}
+function updateCounter(){
+  const el = $("#counter");
+  const n = S.pool.length;
+  if(!n){ el.textContent = "No poses match this wheel + filter"; return; }
+  if(S.meta.settings.fair){
+    let rem = fairRemaining();
+    if(!rem.length) rem = S.pool.map(p=>p.id);
+    el.textContent = `${n} poses · ${rem.length} left before reshuffle`;
+  }else{
+    el.textContent = `${n} poses`;
+  }
+}
+
+/* =============================================================
+   IMAGE CACHE + drawing helpers
+   ============================================================= */
+const imgCache = new Map(); // poseId -> HTMLImageElement (decoded)
+function poseImage(p){
+  if(!p.img) return null;
+  let im = imgCache.get(p.id);
+  if(im && im._src === p.img) return im.complete ? im : null;
+  im = new Image();
+  im._src = p.img;
+  im.onload = () => requestDraw();
+  im.onerror = () => { console.warn("Image failed to decode for pose", p.id); requestDraw(); };
+  im.src = p.img;
+  imgCache.set(p.id, im);
+  return im.complete ? im : null;
+}
+function preloadImages(poses){
+  for(const p of poses){ if(p.img) poseImage(p); }
+}
+function drawCover(ctx, img, rx, ry, rw, rh, crop, wedge){
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  if(!iw || !ih) return;
+  const portrait = wedge && ih > iw * 1.2;
+  if(portrait){
+    // Rotate 90° CW so the tall image runs along the radial (wide) axis of the wedge.
+    // After rotation the image's height becomes horizontal (ew) and width becomes vertical (eh).
+    const ew = ih, eh = iw;
+    const s = Math.max(rw/ew, rh/eh) * (crop.s||1);
+    const dw = ew*s, dh = eh*s;
+    const mx = Math.max(0,(dw-rw)/2), my = Math.max(0,(dh-rh)/2);
+    // Gentle default bias toward the rim so the head (top of photo) sits outward,
+    // but not so much that it clips. User crop.x overrides.
+    const cx = (crop.x !== undefined && crop.x !== 0) ? crop.x : -0.25;
+    const dx = rx + (rw-dw)/2 + clamp(cx,-1,1)*mx;
+    const dy = ry + (rh-dh)/2 + clamp(crop.y||0,-1,1)*my;
+    ctx.save();
+    ctx.translate(dx + dw/2, dy + dh/2);
+    ctx.rotate(Math.PI/2);
+    ctx.drawImage(img, -dh/2, -dw/2, dh, dw);
+    ctx.restore();
+  } else {
+    const s = Math.max(rw/iw, rh/ih) * (crop.s||1);
+    const dw = iw*s, dh = ih*s;
+    const mx = Math.max(0,(dw-rw)/2), my = Math.max(0,(dh-rh)/2);
+    const dx = rx + (rw-dw)/2 + clamp(crop.x||0,-1,1)*mx;
+    const dy = ry + (rh-dh)/2 + clamp(crop.y||0,-1,1)*my;
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+}
+function truncate(ctx, text, maxW){
+  if(ctx.measureText(text).width <= maxW) return text;
+  let t = text;
+  while(t.length > 1 && ctx.measureText(t+"…").width > maxW) t = t.slice(0,-1);
+  return t+"…";
+}
+
+/* =============================================================
+   WHEEL RENDER
+   ============================================================= */
+const cv = $("#wheel"), ctx = cv.getContext("2d");
+const G = { css:0, cx:0, cy:0, R:0, hubR:0 };
+let drawQueued = false;
+function requestDraw(){ if(!drawQueued){ drawQueued = true; requestAnimationFrame(()=>{ drawQueued=false; draw(); }); } }
+
+function resizeWheel(){
+  const stage = $("#stage");
+  const size = Math.floor(Math.min(stage.clientWidth, stage.clientHeight) - 16);
+  if(size < 100) return;
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  G.css = size;
+  cv.style.width = cv.style.height = size+"px";
+  cv.width = cv.height = Math.round(size*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  G.cx = G.cy = size/2;
+  G.R = size/2 - 6;
+  G.hubR = Math.max(40, G.R*0.17);
+  const hub = $("#hub");
+  hub.style.width = hub.style.height = Math.round(G.hubR*2 - 10)+"px";
+  hub.style.fontSize = Math.round(G.hubR*0.42)+"px";
+  const stageRect = stage.getBoundingClientRect();
+  const cvTop = (stage.clientHeight - size)/2;
+  void stageRect;
+  // Position pointer tip at the top of the wheel rim, pointing down
+  const ptr = $("#pointerEl");
+  const rimTop = cvTop + size/2 - G.R;
+  ptr.style.top = (rimTop - 26) + "px";
+  ptr.style.left = "50%";
+  ptr.style.transform = "translateX(-50%)";
+  requestDraw();
+}
+
+function wedgePath(a0, a1){
+  ctx.beginPath();
+  ctx.moveTo(G.cx, G.cy);
+  ctx.arc(G.cx, G.cy, G.R, a0, a1);
+  ctx.closePath();
+}
+
+function draw(){
+  const n = S.pool.length;
+  ctx.clearRect(0,0,G.css,G.css);
+  if(!n){
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,.15)";
+    ctx.setLineDash([8,10]); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(G.cx,G.cy,G.R-4,0,TAU); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(255,255,255,.5)";
+    ctx.font = "700 16px ui-rounded,system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("No poses match — change the filter or add poses", G.cx, G.cy - G.hubR - 24);
+    ctx.restore();
+    return;
+  }
+  const slice = TAU/n;
+  const fs = Math.min(S.meta.settings.wheelFont, n>26 ? 14 : 99);
+
+  for(let i=0;i<n;i++){
+    const p  = S.pool[i];
+    const a0 = S.rot + i*slice, a1 = a0 + slice, mid = a0 + slice/2;
+
+    // 1. Fill entire wedge with black (this is the filler where photos don't reach)
+    wedgePath(a0,a1);
+    ctx.fillStyle = "#000"; ctx.fill();
+
+    // 2. Draw photo covering the whole wedge, clipped to the wedge shape
+    let im = p.showImg ? poseImage(p) : null;
+    if(im && (!im.naturalWidth || !im.naturalHeight)) im = null; // guard: "complete" fires for broken images too
+    if(im){
+      ctx.save();
+      wedgePath(a0,a1); ctx.clip();
+      ctx.translate(G.cx,G.cy); ctx.rotate(mid);
+      // Photo spans from hub to rim, full wedge height
+      const ir = G.hubR;
+      const w  = G.R - ir;
+      const h  = 2*G.R*Math.sin(slice/2) + 12;
+      drawCover(ctx, im, ir, -h/2, w, h, p.crop, true);
+      ctx.restore();
+    }
+
+    // 3. Draw text
+    ctx.save();
+    ctx.translate(G.cx,G.cy); ctx.rotate(mid);
+    const tfs = Math.round(fs * 2.2);
+    ctx.font = `800 ${tfs}px ui-rounded,-apple-system,system-ui,sans-serif`;
+    ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(truncate(ctx, (p.text.split("\n")[0]), G.R - G.hubR - 20), G.hubR + 16, 0);
+    ctx.restore();
+  }
+
+  // separators + rim
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 2;
+  for(let i=0;i<n;i++){
+    const a = S.rot + i*slice;
+    ctx.beginPath();
+    ctx.moveTo(G.cx + Math.cos(a)*(G.hubR-6), G.cy + Math.sin(a)*(G.hubR-6));
+    ctx.lineTo(G.cx + Math.cos(a)*G.R,        G.cy + Math.sin(a)*G.R);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(255,255,255,.25)"; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.arc(G.cx,G.cy,G.R-3,0,TAU); ctx.stroke();
+  ctx.restore();
+}
+
+const idxUnder = rot => {
+  const n = S.pool.length; if(!n) return -1;
+  const th = ((-Math.PI/2 - rot) % TAU + TAU) % TAU;
+  return Math.floor(th / (TAU/n)) % n;
+};
+
+/* =============================================================
+   SOUND — WebAudio, no assets
+   ============================================================= */
+let AC = null;
+function audio(){
+  if(!S.meta.settings.sound) return null;
+  if(!AC){
+    const C = window.AudioContext || window.webkitAudioContext;
+    if(!C) return null;
+    AC = new C();
+  }
+  if(AC.state === "suspended") AC.resume();
+  return AC;
+}
+const vol = () => S.meta.settings.vol;
+function tickSound(){
+  const ac = audio(); if(!ac) return;
+  const t = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "square";
+  o.frequency.setValueAtTime(1400 + Math.random()*250, t);
+  g.gain.setValueAtTime(0.16*vol(), t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+0.045);
+  o.connect(g).connect(ac.destination);
+  o.start(t); o.stop(t+0.05);
+}
+function whooshSound(){
+  const ac = audio(); if(!ac) return;
+  const t = ac.currentTime, dur = 0.55;
+  const buf = ac.createBuffer(1, ac.sampleRate*dur, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2;
+  f.frequency.setValueAtTime(300, t);
+  f.frequency.exponentialRampToValueAtTime(1400, t+dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.25*vol(), t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  src.connect(f).connect(g).connect(ac.destination);
+  src.start(t);
+}
+function landSound(){
+  const ac = audio(); if(!ac) return;
+  const t = ac.currentTime;
+  [523.25, 659.25, 783.99, 1046.5].forEach((f,i)=>{
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "triangle"; o.frequency.value = f;
+    const s = t + i*0.09;
+    g.gain.setValueAtTime(0.0001, s);
+    g.gain.exponentialRampToValueAtTime(0.3*vol(), s+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, s+0.5);
+    o.connect(g).connect(ac.destination);
+    o.start(s); o.stop(s+0.55);
+  });
+}
+
+/* =============================================================
+   CONFETTI
+   ============================================================= */
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("#confetti"); c.hidden = false;
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  c.width = innerWidth*dpr; c.height = innerHeight*dpr;
+  c.style.width = innerWidth+"px"; c.style.height = innerHeight+"px";
+  const x = c.getContext("2d"); x.setTransform(dpr,0,0,dpr,0,0);
+  const parts = Array.from({length:110}, ()=>({
+    x: innerWidth/2 + (Math.random()-.5)*140,
+    y: -12 - Math.random()*60,
+    vx:(Math.random()-.5)*7, vy: 2+Math.random()*5,
+    r: 4+Math.random()*6, a: Math.random()*TAU, va:(Math.random()-.5)*.4,
+    col: PALETTE[(Math.random()*PALETTE.length)|0],
+  }));
+  const t0 = performance.now();
+  (function step(now){
+    const k = (now-t0)/1500;
+    x.clearRect(0,0,innerWidth,innerHeight);
+    for(const p of parts){
+      p.x+=p.vx; p.y+=p.vy; p.vy+=.15; p.a+=p.va;
+      x.save(); x.translate(p.x,p.y); x.rotate(p.a);
+      x.fillStyle = p.col; x.globalAlpha = clamp(1.4-k,0,1);
+      x.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);
+      x.restore();
+    }
+    if(k<1) requestAnimationFrame(step);
+    else { x.clearRect(0,0,innerWidth,innerHeight); c.hidden = true; }
+  })(t0);
+}
+
+/* =============================================================
+   SPIN ENGINE — fair-mode target is chosen first, the animation
+   eases to it; a flick sets direction + energy (feel), not fate.
+   ============================================================= */
+function pickTargetIndex(){
+  const ids = S.pool.map(p=>p.id);
+  let pickFrom = ids;
+  if(S.meta.settings.fair){
+    let rem = fairRemaining();
+    if(!rem.length){
+      rem = [...ids];
+      if((S.meta.fair[fairKey()]||[]).length === 0 && S.meta.fair[fairKey()] !== undefined){
+        toast("Every pose was used — reshuffled ✨");
+      }
+    }
+    pickFrom = rem;
+  }
+  const id = pickFrom[(Math.random()*pickFrom.length)|0];
+  return ids.indexOf(id);
+}
+
+function spin(energy=0.6, dir=1, buttonSpin=false){
+  if(S.animating) return;
+  if(S.pool.length === 0){ toast("No poses on this wheel"); return; }
+  if(S.pool.length === 1){ land(0); return; }
+
+  const T = pickTargetIndex();
+  const n = S.pool.length, slice = TAU/n;
+  // Land closer to a slice boundary (peg) so it's suspenseful which side it settles.
+  // f near 0 or 1 = near a peg edge; bias toward the edges for drama.
+  const edgeBias = Math.random() < 0.5 ? 0.10 + Math.random()*0.18   // near leading peg
+                                       : 0.72 + Math.random()*0.18;  // near trailing peg
+  const f = edgeBias;
+  const base = -Math.PI/2 - (T+f)*slice;
+  const diffPos = ((base - S.rot) % TAU + TAU) % TAU;
+  const turns = 2 + Math.round(energy*8);
+  const delta = dir >= 0 ? (turns*TAU + diffPos)
+                         : -(turns*TAU + (TAU - diffPos));
+  const dur = (buttonSpin ? S.meta.settings.spinSec : (1.5 + energy * 6)) * 1000;
+  const r0 = S.rot, t0 = performance.now();
+  const rFinal = r0 + delta;
+
+  S.animating = true;
+  S.lastTickIdx = idxUnder(S.rot);
+  whooshSound();
+
+  // Strong ease-out: fast start, long dramatic crawl at the end (quintic).
+  // Then a small peg settle: overshoot slightly and bounce back onto the slice.
+  const settleAmt = slice * 0.14; // how far it overshoots at the peg
+  const settleDur = 520;          // ms for the settle bounce
+
+  (function frame(now){
+    const elapsed = now - t0;
+    if(elapsed < dur){
+      const k = clamp(elapsed/dur, 0, 1);
+      // Quintic ease-out — slows down much sooner and crawls at the end
+      const e = 1 - Math.pow(1-k, 5);
+      S.rot = r0 + delta*e;
+      const idx = idxUnder(S.rot);
+      if(idx !== S.lastTickIdx){ S.lastTickIdx = idx; tickSound(); }
+      draw();
+      requestAnimationFrame(frame);
+    } else {
+      // Peg settle phase: damped bounce onto the final resting angle
+      const se = clamp((elapsed - dur)/settleDur, 0, 1);
+      if(se < 1){
+        // Damped sine: overshoots then settles to 0 offset
+        const damp = Math.pow(1-se, 2);
+        const offset = Math.sin(se * Math.PI * 2) * settleAmt * damp * dir;
+        S.rot = rFinal + offset;
+        const idx = idxUnder(S.rot);
+        if(idx !== S.lastTickIdx){ S.lastTickIdx = idx; tickSound(); }
+        draw();
+        requestAnimationFrame(frame);
+      } else {
+        S.rot = rFinal;
+        draw();
+        S.animating = false;
+        // Winner is whatever the pointer actually rests on after the settle
+        const finalIdx = idxUnder(S.rot);
+        land(finalIdx >= 0 ? finalIdx : T);
+      }
+    }
+  })(t0);
+}
+
+function land(T){
+  const p = S.pool[T];
+  if(!p) return;
+  if(S.meta.settings.fair){
+    let rem = fairRemaining();
+    if(!rem.length) rem = S.pool.map(x=>x.id);
+    S.meta.fair[fairKey()] = rem.filter(id=>id!==p.id);
+  }
+  S.meta.last = p.id;
+  saveMeta();
+  landSound();
+  confetti();
+  showLanding(p);
+  renderLastBar();
+  // Rebuild pool so used pose disappears from wheel in fair mode
+  computePool();
+  requestDraw();
+}
+
+/* ---------------- flick to spin ---------------- */
+(function(){
+  let dragging = false, prevA = 0, samples = [];
+  const angAt = e => {
+    const r = cv.getBoundingClientRect();
+    return Math.atan2(e.clientY-(r.top+r.height/2), e.clientX-(r.left+r.width/2));
+  };
+  cv.addEventListener("pointerdown", e=>{
+    if(S.animating || !S.pool.length) return;
+    dragging = true;
+    cv.setPointerCapture(e.pointerId);
+    prevA = angAt(e);
+    samples = [{t:performance.now(), a:0}];
+  });
+  cv.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const a = angAt(e);
+    let d = a - prevA;
+    if(d >  Math.PI) d -= TAU;
+    if(d < -Math.PI) d += TAU;
+    prevA = a;
+    S.rot += d;
+    const last = samples[samples.length-1];
+    samples.push({t:performance.now(), a:last.a + d});
+    const cutoff = performance.now() - 130;
+    while(samples.length > 2 && samples[0].t < cutoff) samples.shift();
+    requestDraw();
+  });
+  const up = e=>{
+    if(!dragging) return;
+    dragging = false;
+    const first = samples[0], last = samples[samples.length-1];
+    const dt = (last.t - first.t)/1000;
+    const w  = dt > 0 ? (last.a - first.a)/dt : 0;   // rad/s
+    if(Math.abs(w) > 2.2){
+      const energy = clamp((Math.abs(w)-2)/16, 0.12, 1);
+      spin(energy, Math.sign(w));
+    }else{
+      requestDraw();
+    }
+  };
+  cv.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  $("#hub").addEventListener("click", ()=>spin(0.5 + Math.random()*0.35, 1, true));
+})();
+
+/* =============================================================
+   LANDING OVERLAY — always the ORIGINAL full-res photo + big text
+   ============================================================= */
+function showLanding(p){
+  const ov = $("#landing"), img = $("#landImg"), no = $("#landNoImg"), ttl = $("#landTitle"), desc = $("#landDesc");
+  if(p.img){ img.src = p.img; img.style.display = "block"; no.style.display = "none"; }
+  else     { img.removeAttribute("src"); img.style.display = "none"; no.style.display = "grid"; }
+  const parts = p.text.split("\n");
+  const title = parts[0] || p.text;
+  const body = parts.slice(1).join(" ").trim();
+  const len = title.length;
+  const scale = len > 60 ? .75 : len > 35 ? .88 : 1;
+  ttl.style.fontSize = Math.round(S.meta.settings.resultFont * scale * 1.8) + "px";
+  ttl.textContent = title;
+  desc.textContent = body;
+  // Description nearly as large as title
+  desc.style.fontSize = Math.round(S.meta.settings.resultFont * scale * 0.9) + "px";
+  desc.classList.remove("reveal");
+  if(body) setTimeout(()=>desc.classList.add("reveal"), 1500);
+  ov.classList.add("show");
+}
+$("#landing").addEventListener("click", ()=> $("#landing").classList.remove("show"));
+$("#landClose").addEventListener("click", e=>{ e.stopPropagation(); $("#landing").classList.remove("show"); });
+$("#landAgain").addEventListener("click", e=>{
+  e.stopPropagation();
+  $("#landing").classList.remove("show");
+  setTimeout(()=>spin(0.55 + Math.random()*0.3, 1), 120);
+});
+
+function renderLastBar(){
+  const bar = $("#lastBar");
+  const p = S.meta.last ? S.poses.get(S.meta.last) : null;
+  if(!p){ bar.classList.remove("show"); return; }
+  $("#lastThumb").style.backgroundImage = p.img ? `url(${p.img})` : "none";
+  $("#lastText").innerHTML = `Last: <b></b>`;
+  $("#lastText b").textContent = p.text.split("\n")[0];
+  bar.classList.add("show");
+}
+$("#lastBar").addEventListener("click", ()=>{
+  const p = S.meta.last ? S.poses.get(S.meta.last) : null;
+  if(p) showLanding(p);
+});
+
+/* =============================================================
+   LIBRARY LIST
+   ============================================================= */
+let poseSort = "all";
+function renderPoseList(){
+  const q = $("#poseSearch").value.trim().toLowerCase();
+  const wrap = $("#poseList");
+  wrap.innerHTML = "";
+  const tagName = {1:"Solo",2:"Pair",3:"Group",4:"♂"};
+  // Sort: active with photos first, active without photos, archived last
+  const sorted = [...S.meta.order].sort((a,b)=>{
+    const pa = S.poses.get(a), pb = S.poses.get(b);
+    if(!pa || !pb) return 0;
+    const aa = pa.archived?1:0, ab = pb.archived?1:0;
+    if(aa !== ab) return aa - ab;
+    if(pa.img && !pb.img) return -1;
+    if(!pa.img && pb.img) return 1;
+    return 0;
+  });
+  for(const id of sorted){
+    const p = S.poses.get(id);
+    if(!p) continue;
+    if(q && !p.text.toLowerCase().includes(q)) continue;
+    // Filter by sort chip
+    if(poseSort === "arc"){
+      if(!p.archived) continue;
+    } else if(poseSort !== "all"){
+      if(p.archived) continue;
+      const tags = p.tags||[];
+      if(poseSort.endsWith("m")){
+        if(!tags.includes(+poseSort.charAt(0)) || !tags.includes(4)) continue;
+      } else {
+        if(!tags.includes(+poseSort)) continue;
+      }
+    } else {
+      // "all" hides archived
+      if(p.archived) continue;
+    }
+    const parts = p.text.split("\n");
+    const title = parts[0] || p.text;
+    const desc = parts.slice(1).join(" ").trim();
+    const row = document.createElement("div");
+    row.className = "prow" + (p.img ? "" : " noimg") + (p.archived ? " archived" : "");
+    let inner = "";
+    if(p.img){
+      inner += `<img class="pimg" src="${p.img}" alt="">`
+             + `<span class="pfade"></span>`;
+    }
+    inner += `<div class="prow-body">`;
+    inner += `<input class="ptitle-edit" value="">`;
+    if(desc) inner += `<div class="pdesc">${desc}</div>`;
+    inner += `<div class="prow-actions">`;
+    inner += `<span class="ptags-inline">`;
+    for(const t of [1,2,3,4]){
+      const on = (p.tags||[]).includes(t);
+      inner += `<button class="itag${on?" on":""}" data-t="${t}">${tagName[t]}</button>`;
+    }
+    inner += `</span>`;
+    inner += `<button class="parc-btn">${p.archived?"Restore":"📦"}</button>`;
+    inner += `</div></div>`;
+    row.innerHTML = inner;
+    // Whole card opens the editor when tapped (except on interactive controls)
+    row.addEventListener("click", ()=>openPoseModal(id));
+    const titleInput = row.querySelector(".ptitle-edit");
+    titleInput.value = title;
+    titleInput.addEventListener("change", e=>{
+      const pts = p.text.split("\n");
+      pts[0] = e.target.value.trim() || pts[0];
+      p.text = pts.join("\n");
+      savePose(p); requestDraw();
+    });
+    titleInput.addEventListener("click", e=>e.stopPropagation());
+    row.querySelectorAll(".itag").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        e.stopPropagation();
+        const tag = +btn.dataset.t;
+        const idx = (p.tags||[]).indexOf(tag);
+        if(idx===-1) p.tags.push(tag); else p.tags.splice(idx,1);
+        btn.classList.toggle("on");
+        savePose(p); computePool(); requestDraw();
+      });
+    });
+    row.querySelector(".parc-btn").addEventListener("click", e=>{
+      e.stopPropagation();
+      p.archived = !p.archived;
+      if(p.archived) S.meta.wheels.forEach(w=>{ const i=w.poseIds.indexOf(id); if(i!==-1) w.poseIds.splice(i,1); });
+      savePose(p); saveMeta(true); computePool(); requestDraw(); renderPoseList();
+      toast(p.archived ? "Archived" : "Restored to active");
+    });
+    wrap.appendChild(row);
+  }
+  if(!wrap.children.length){
+    const d = document.createElement("p");
+    d.className = "hint"; d.style.textAlign = "center"; d.style.padding = "26px 0";
+    d.textContent = q ? "No poses match that search." : "No poses yet — tap ＋ Add to create your first one.";
+    wrap.appendChild(d);
+  }
+}
+$("#poseSearch").addEventListener("input", renderPoseList);
+$("#addPoseBtn").addEventListener("click", ()=>openPoseModal(null));
+$$("#poseSortChips .chip").forEach(c=>{
+  c.addEventListener("click", ()=>{
+    poseSort = c.dataset.ps;
+    $$("#poseSortChips .chip").forEach(x=>x.classList.toggle("on", x.dataset.ps === poseSort));
+    renderPoseList();
+  });
+});
+
+/* ---------- Bulk photo import ---------- */
+$("#bulkPhotoBtn").addEventListener("click", ()=>$("#bulkPhotoFile").click());
+$("#bulkPhotoFile").addEventListener("change", async e=>{
+  const files = [...e.target.files];
+  e.target.value = "";
+  if(!files.length) return;
+  const imgFiles = files.filter(f=>f.type.startsWith("image/"));
+  if(!imgFiles.length){ toast("No images selected"); return; }
+  if(!confirm(`Create ${imgFiles.length} new pose${imgFiles.length>1?"s":""} from these photos?`)) return;
+  $("#loading").style.display = "grid";
+  let created = 0;
+  for(const f of imgFiles){
+    created++;
+    $("#loadMsg").textContent = `Processing photo ${created} of ${imgFiles.length}…`;
+    try{
+      let url = await fileToDataURL(f, 2000, 0.82);
+      if(url.length > 4_500_000) url = await fileToDataURL(f, 1400, 0.72);
+      const label = f.name.replace(/\.[^.]+$/, "").replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
+      const i = S.meta.order.length + created;
+      const p = newPose(label || `Pose ${i}`, [1,2,3,4], i);
+      p.img = url;
+      S.poses.set(p.id, p);
+      S.meta.order.push(p.id);
+      await savePose(p);
+    }catch(err){
+      console.warn("Skipped file:", f.name, err);
+    }
+  }
+  await saveMeta(true);
+  refreshAll();
+  $("#loading").style.display = "none";
+  toast(`${created} pose${created>1?"s":""} created. Tap each to edit the text and tags.`);
+});
+
+/* =============================================================
+   POSE MODAL (with wheel-slice crop preview)
+   ============================================================= */
+const PM = { isNew:false, draft:null, wheelSel:new Set(), tcTouched:false, imEl:null };
+
+function buildSwatches(){
+  const bgRow = $("#pmBgRow");
+  PALETTE.forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "sw"; b.style.background = c; b.dataset.c = c;
+    b.addEventListener("click", ()=>{
+      PM.draft.bg = c;
+      if(!PM.tcTouched) PM.draft.tc = autoText(c);
+      refreshSwatchSel(); renderCrop();
+    });
+    bgRow.appendChild(b);
+  });
+  const tcRow = $("#pmTcRow");
+  ["#ffffff","#141414"].forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "sw"; b.style.background = c; b.dataset.c = c;
+    b.style.border = "2px solid var(--line)";
+    b.addEventListener("click", ()=>{
+      PM.draft.tc = c; PM.tcTouched = true;
+      refreshSwatchSel(); renderCrop();
+    });
+    tcRow.appendChild(b);
+  });
+}
+function refreshSwatchSel(){
+  $$("#pmBgRow .sw").forEach(b=>b.classList.toggle("on", b.dataset.c === PM.draft.bg));
+  $$("#pmTcRow .sw").forEach(b=>b.classList.toggle("on", b.dataset.c === PM.draft.tc));
+}
+
+function openPoseModal(id){
+  PM.isNew = !id;
+  PM.tcTouched = false;
+  PM.imEl = null;
+  if(id){
+    const p = S.poses.get(id);
+    PM.draft = JSON.parse(JSON.stringify(p));
+  }else{
+    PM.draft = newPose("", [1,2,3,4], S.meta.order.length);
+  }
+  $("#pmTitle").textContent = PM.isNew ? "New pose" : "Edit pose";
+  $("#pmText").value = PM.draft.text;
+  $$("#poseModal .tagchips .chip").forEach(c=>{
+    c.classList.toggle("on", (PM.draft.tags||[]).includes(+c.dataset.t));
+  });
+  $("#pmShowImg").checked = PM.draft.showImg !== false;
+  $("#pmZoom").value = PM.draft.crop.s || 1;
+  PM.wheelSel = new Set(S.meta.wheels.filter(w=>w.poseIds.includes(PM.draft.id)).map(w=>w.id));
+  const wc = $("#pmWheels");
+  wc.innerHTML = "";
+  S.meta.wheels.forEach(w=>{
+    const l = document.createElement("label");
+    l.className = "wcheck";
+    l.innerHTML = `<input type="checkbox" ${PM.wheelSel.has(w.id)?"checked":""}><span class="t"></span>`;
+    l.querySelector(".t").textContent = w.name;
+    l.querySelector("input").addEventListener("change", e=>{
+      if(e.target.checked) PM.wheelSel.add(w.id); else PM.wheelSel.delete(w.id);
+    });
+    wc.appendChild(l);
+  });
+  $("#pmWheelsHint").style.display = S.meta.wheels.length ? "none" : "block";
+  refreshSwatchSel();
+  loadDraftImage();
+  $("#poseModal").classList.add("show");
+  renderCrop();
+}
+function closePoseModal(){ $("#poseModal").classList.remove("show"); PM.draft = null; }
+
+function loadDraftImage(){
+  PM.imEl = null;
+  if(!PM.draft.img) { renderCrop(); return; }
+  const im = new Image();
+  im.onload = ()=>{ PM.imEl = im; renderCrop(); };
+  im.src = PM.draft.img;
+}
+
+/* ----- crop preview canvas ----- */
+const cropCv = $("#cropCv"), cctx = cropCv.getContext("2d");
+function renderCrop(){
+  if(!PM.draft) return;
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  const W = cropCv.clientWidth || 300, H = 150;
+  cropCv.width = W*dpr; cropCv.height = H*dpr;
+  cctx.setTransform(dpr,0,0,dpr,0,0);
+  cctx.clearRect(0,0,W,H);
+
+  const cx = 8, cy = H/2, R = W - 20, wa = 0.34, hubR = R*0.17;
+  const path = ()=>{ cctx.beginPath(); cctx.moveTo(cx,cy); cctx.arc(cx,cy,R,-wa/2,wa/2); cctx.closePath(); };
+
+  path(); cctx.fillStyle = PM.draft.bg; cctx.fill();
+
+  if(PM.imEl && PM.draft.img){
+    cctx.save(); path(); cctx.clip();
+    cctx.translate(cx,cy);
+    const ir = hubR + (R-hubR)*0.44, w = R-ir, h = 2*R*Math.sin(wa/2)+16;
+    drawCover(cctx, PM.imEl, ir, -h/2, w, h, PM.draft.crop);
+    const grad = cctx.createLinearGradient(ir,0,ir+w*0.45,0);
+    grad.addColorStop(0, PM.draft.bg); grad.addColorStop(1, PM.draft.bg+"00");
+    cctx.fillStyle = grad; cctx.fillRect(ir,-h/2,w*0.45,h);
+    cctx.restore();
+  }else{
+    cctx.save(); cctx.fillStyle = "rgba(255,255,255,.55)";
+    cctx.font = "700 13px ui-rounded,system-ui"; cctx.textAlign = "right";
+    cctx.fillText("No photo yet", W-14, H-12);
+    cctx.restore();
+  }
+
+  cctx.save();
+  cctx.translate(cx,cy);
+  cctx.font = "800 15px ui-rounded,-apple-system,system-ui,sans-serif";
+  cctx.textBaseline = "middle";
+  cctx.fillStyle = PM.draft.tc;
+  cctx.shadowColor = "rgba(0,0,0,.55)"; cctx.shadowBlur = 5;
+  cctx.fillText(truncate(cctx, $("#pmText").value || PM.draft.text || "Pose text", R-hubR-24), hubR+12, 0);
+  cctx.restore();
+
+  path(); cctx.strokeStyle = "rgba(255,255,255,.25)"; cctx.lineWidth = 2; cctx.stroke();
+}
+$("#pmText").addEventListener("input", renderCrop);
+$("#pmZoom").addEventListener("input", e=>{
+  PM.draft.crop.s = +e.target.value; renderCrop();
+});
+(function(){
+  let drag = false, px=0, py=0;
+  cropCv.addEventListener("pointerdown", e=>{
+    drag = true; px = e.clientX; py = e.clientY;
+    cropCv.setPointerCapture(e.pointerId);
+  });
+  cropCv.addEventListener("pointermove", e=>{
+    if(!drag || !PM.draft) return;
+    PM.draft.crop.x = clamp(PM.draft.crop.x + (e.clientX-px)/110, -1, 1);
+    PM.draft.crop.y = clamp(PM.draft.crop.y + (e.clientY-py)/60, -1, 1);
+    px = e.clientX; py = e.clientY;
+    renderCrop();
+  });
+  const up = ()=>drag=false;
+  cropCv.addEventListener("pointerup", up);
+  cropCv.addEventListener("pointercancel", up);
+})();
+
+/* ----- photo pick + downscale (stores ONE original-quality copy) ----- */
+async function fileToDataURL(file, maxDim, quality){
+  const raw = await new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result); r.onerror = ()=>rej(r.error);
+    r.readAsDataURL(file);
+  });
+  const im = await new Promise((res,rej)=>{
+    const i = new Image();
+    i.onload = ()=>res(i); i.onerror = ()=>rej(new Error("Could not read that image"));
+    i.src = raw;
+  });
+  const sc = Math.min(1, maxDim/Math.max(im.naturalWidth, im.naturalHeight));
+  const w = Math.round(im.naturalWidth*sc), h = Math.round(im.naturalHeight*sc);
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  c.getContext("2d").drawImage(im, 0, 0, w, h);
+  return c.toDataURL("image/jpeg", quality);
+}
+$("#pmPickImg").addEventListener("click", ()=>$("#pmFile").click());
+$("#pmFile").addEventListener("change", async e=>{
+  const f = e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  try{
+    toast("Processing photo…");
+    let url = await fileToDataURL(f, 2000, 0.82);
+    if(url.length > 4_500_000) url = await fileToDataURL(f, 1400, 0.72);
+    PM.draft.img = url;
+    PM.draft.crop = { s:1, x:0, y:0 };
+    PM.draft.showImg = true;
+    $("#pmShowImg").checked = true;
+    $("#pmZoom").value = 1;
+    loadDraftImage();
+    toast("Photo added");
+  }catch(err){
+    toast("Couldn't read that image");
+  }
+});
+$("#pmRemoveImg").addEventListener("click", ()=>{
+  PM.draft.img = null; PM.imEl = null; renderCrop();
+});
+$("#pmShowImg").addEventListener("change", e=>{ PM.draft.showImg = e.target.checked; });
+$$("#poseModal .tagchips .chip").forEach(c=>{
+  c.addEventListener("click", ()=>c.classList.toggle("on"));
+});
+
+$("#pmCancel").addEventListener("click", closePoseModal);
+$("#pmDelete").addEventListener("click", async ()=>{
+  if(PM.isNew){ closePoseModal(); return; }
+  if(!confirm("Delete this pose everywhere? This can't be undone.")) return;
+  await deletePoseEverywhere(PM.draft.id);
+  imgCache.delete(PM.draft.id);
+  closePoseModal();
+  refreshAll();
+  toast("Pose deleted");
+});
+$("#pmSave").addEventListener("click", async ()=>{
+  const text = $("#pmText").value.trim();
+  if(!text){ toast("Give the pose some text first"); return; }
+  PM.draft.text = text;
+  let tags = $$("#poseModal .tagchips .chip").filter(c=>c.classList.contains("on")).map(c=>+c.dataset.t);
+  if(!tags.length) tags = [1,2,3,4];
+  PM.draft.tags = tags;
+  const p = PM.draft;
+  S.poses.set(p.id, p);
+  imgCache.delete(p.id);
+  if(PM.isNew) S.meta.order.push(p.id);
+  S.meta.wheels.forEach(w=>{
+    const has = PM.wheelSel.has(w.id), idx = w.poseIds.indexOf(p.id);
+    if(has && idx === -1) w.poseIds.push(p.id);
+    if(!has && idx !== -1) w.poseIds.splice(idx,1);
+  });
+  await savePose(p);
+  saveMeta(true);
+  closePoseModal();
+  refreshAll();
+  toast("Saved ✓");
+});
+
+/* =============================================================
+   WHEELS VIEW
+   ============================================================= */
+let expandedWheel = null;
+function renderWheels(){
+  const wrap = $("#wheelList");
+  wrap.innerHTML = "";
+  const mk = (w)=>{
+    const row = document.createElement("button");
+    row.className = "wrow";
+    row.innerHTML = `<b></b><span class="cnt"></span><span style="margin-left:auto;color:var(--dim)">${w ? "›" : ""}</span>`;
+    row.querySelector("b").textContent = w ? w.name : "All poses";
+    row.querySelector(".cnt").textContent = (w ? w.poseIds.length : S.meta.order.length) + " poses";
+    if(w) row.addEventListener("click", ()=>{
+      expandedWheel = expandedWheel === w.id ? null : w.id;
+      renderWheels();
+    });
+    else row.style.opacity = .75;
+    wrap.appendChild(row);
+    if(w && expandedWheel === w.id){
+      const d = document.createElement("div");
+      d.className = "card";
+      d.innerHTML = `
+        <div class="row" style="margin-bottom:10px">
+          <input type="text" class="wname">
+          <button class="btn small danger wdel">Delete wheel</button>
+        </div>
+        <div class="wposes"></div>`;
+      const nameIn = d.querySelector(".wname");
+      nameIn.value = w.name;
+      nameIn.addEventListener("change", ()=>{
+        w.name = nameIn.value.trim() || w.name;
+        saveMeta(); renderWheelSel(); renderWheels();
+      });
+      d.querySelector(".wdel").addEventListener("click", ()=>{
+        if(!confirm(`Delete the wheel “${w.name}”? Poses stay in your library.`)) return;
+        S.meta.wheels = S.meta.wheels.filter(x=>x.id!==w.id);
+        for(const k of Object.keys(S.meta.fair)) if(k.startsWith(w.id+"|")) delete S.meta.fair[k];
+        if(S.meta.activeWheel === w.id) S.meta.activeWheel = "all";
+        expandedWheel = null;
+        saveMeta(true); refreshAll();
+      });
+      const list = d.querySelector(".wposes");
+      for(const id of S.meta.order){
+        const p = S.poses.get(id); if(!p) continue;
+        const l = document.createElement("label");
+        l.className = "wcheck";
+        l.innerHTML = `<input type="checkbox" ${w.poseIds.includes(id)?"checked":""}><span class="t"></span>`;
+        l.querySelector(".t").textContent = p.text;
+        l.querySelector("input").addEventListener("change", e=>{
+          const i = w.poseIds.indexOf(id);
+          if(e.target.checked && i===-1) w.poseIds.push(id);
+          if(!e.target.checked && i!==-1) w.poseIds.splice(i,1);
+          saveMeta();
+          row.querySelector(".cnt").textContent = w.poseIds.length + " poses";
+          if(S.meta.activeWheel === w.id){ computePool(); requestDraw(); }
+        });
+        list.appendChild(l);
+      }
+      wrap.appendChild(d);
+    }
+  };
+  mk(null);
+  S.meta.wheels.forEach(mk);
+}
+$("#addWheelBtn").addEventListener("click", ()=>{
+  const name = $("#newWheelName").value.trim();
+  if(!name){ toast("Name the wheel first"); return; }
+  const w = { id: uid(), name, poseIds: [] };
+  S.meta.wheels.push(w);
+  $("#newWheelName").value = "";
+  expandedWheel = w.id;
+  saveMeta(true);
+  renderWheels(); renderWheelSel();
+  toast("Wheel created — tick the poses it should include");
+});
+
+/* =============================================================
+   PLAY CONTROLS
+   ============================================================= */
+function renderWheelSel(){
+  const sel = $("#wheelSel");
+  sel.innerHTML = "";
+  const optAll = document.createElement("option");
+  optAll.value = "all"; optAll.textContent = "All poses";
+  sel.appendChild(optAll);
+  S.meta.wheels.forEach(w=>{
+    const o = document.createElement("option");
+    o.value = w.id; o.textContent = w.name;
+    sel.appendChild(o);
+  });
+  if(S.meta.activeWheel !== "all" && !S.meta.wheels.some(w=>w.id===S.meta.activeWheel)) S.meta.activeWheel = "all";
+  sel.value = S.meta.activeWheel;
+}
+$("#wheelSel").addEventListener("change", e=>{
+  S.meta.activeWheel = e.target.value;
+  saveMeta(); computePool(); requestDraw();
+});
+function setFilterChips(){
+  $$("#filterChips .chip[data-f]").forEach(c=>c.classList.toggle("on", c.dataset.f === S.meta.filter));
+  $("#maleToggle").classList.toggle("on", !!S.meta.maleFilter);
+}
+$$("#filterChips .chip[data-f]").forEach(c=>{
+  c.addEventListener("click", ()=>{
+    S.meta.filter = c.dataset.f;
+    setFilterChips(); saveMeta(); computePool(); requestDraw();
+  });
+});
+$("#maleToggle").addEventListener("click", ()=>{
+  S.meta.maleFilter = !S.meta.maleFilter;
+  setFilterChips(); saveMeta(); computePool(); requestDraw();
+});
+
+/* =============================================================
+   SETTINGS
+   ============================================================= */
+function drawSlicePreview(){
+  const cv = $("#previewSlice");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = cv.getBoundingClientRect();
+  cv.width = rect.width * dpr; cv.height = rect.height * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  // Draw a sample wedge strip
+  const bg = "#8b5cf6";
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+  // Gradient like the real wheel
+  const grad = ctx.createLinearGradient(W*0.4, 0, W, 0);
+  grad.addColorStop(0, bg); grad.addColorStop(0.45, bg+"00");
+  ctx.fillStyle = "#222";
+  ctx.fillRect(W*0.4, 0, W*0.6, H);
+  ctx.fillStyle = grad;
+  ctx.fillRect(W*0.4, 0, W*0.6, H);
+  // Text at current size
+  const fs = S.meta.settings.wheelFont;
+  const tfs = Math.round(fs * 2.2);
+  ctx.font = `800 ${tfs}px ui-rounded,-apple-system,system-ui,sans-serif`;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = "#fff";
+  ctx.fillText("Arched Back ✨", 14, H/2);
+}
+function syncSettingsUI(){
+  const s = S.meta.settings;
+  $("#setWheelFont").value = s.wheelFont;   $("#outWheelFont").textContent = s.wheelFont;
+  $("#setResultFont").value = s.resultFont; $("#outResultFont").textContent = s.resultFont;
+  $("#setSpinSec").value = s.spinSec;       $("#outSpinSec").textContent = s.spinSec + "s";
+  $("#setVol").value = s.vol;               $("#outVol").textContent = Math.round(s.vol*100) + "%";
+  $("#setFair").checked = s.fair;
+  $("#previewResultText").style.fontSize = s.resultFont + "px";
+  drawSlicePreview();
+  $("#setSound").checked = s.sound;
+  const msgs = {
+    claude: "Saving to your Claude account. Open this app in Claude on any of your devices and your wheels come with you.",
+    idb:    "Saving inside this browser on this device. It survives closing the tab, but it does not sync between devices — use Export to move or back up.",
+    mem:    "⚠︎ No storage available in this browser — changes will be lost when you close the page. Export a backup before leaving.",
+  };
+  $("#storageModeMsg").textContent = msgs[store.mode];
+}
+$("#setWheelFont").addEventListener("input", e=>{
+  S.meta.settings.wheelFont = +e.target.value;
+  $("#outWheelFont").textContent = e.target.value;
+  drawSlicePreview();
+  saveMeta(); requestDraw();
+});
+$("#setResultFont").addEventListener("input", e=>{
+  S.meta.settings.resultFont = +e.target.value;
+  $("#outResultFont").textContent = e.target.value;
+  $("#previewResultText").style.fontSize = e.target.value + "px";
+  saveMeta();
+});
+$("#setVol").addEventListener("input", e=>{ S.meta.settings.vol = +e.target.value; $("#outVol").textContent = Math.round(e.target.value*100)+"%"; saveMeta(); });
+$("#setSpinSec").addEventListener("input", e=>{ S.meta.settings.spinSec = +e.target.value; $("#outSpinSec").textContent = e.target.value + "s"; saveMeta(); });
+$("#setFair").addEventListener("change", e=>{ S.meta.settings.fair = e.target.checked; saveMeta(); updateCounter(); });
+$("#setSound").addEventListener("change", e=>{ S.meta.settings.sound = e.target.checked; saveMeta(); if(e.target.checked) tickSound(); });
+$("#resetFairBtn").addEventListener("click", ()=>{ S.meta.fair = {}; saveMeta(); updateCounter(); toast("Fair mode reset — everything's back in the pool"); });
+
+/* ----- export / import / wipe ----- */
+$("#exportBtn").addEventListener("click", ()=>{
+  const poses = [...S.poses.values()];
+  const data = { app:"pose-wheel", v:1, exportedAt:new Date().toISOString(),
+                 meta:S.meta, poses };
+  const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const d = new Date(), pad = x=>String(x).padStart(2,"0");
+  const photoCount = poses.filter(p=>p.img && !p.archived).length;
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}`;
+  a.download = `Glitter Poses ${dateStr} ${timeStr} ${photoCount}photos.json`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  toast(`Backup downloaded (${photoCount} photos)`);
+});
+$("#mergeBtn").addEventListener("click", ()=>$("#mergeFile").click());
+$("#mergeFile").addEventListener("change", async e=>{
+  const f = e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  let data;
+  try{ data = JSON.parse(await f.text()); }catch(err){ toast("That file isn't a valid backup"); return; }
+  if(!data || data.app!=="pose-wheel" || !data.meta || !Array.isArray(data.poses)){
+    toast("That file isn't a Pose Wheel backup"); return;
+  }
+  // Work out what will change before asking
+  let willAdd = 0, willUpdate = 0;
+  for(const p of data.poses){
+    if(S.poses.has(p.id)){
+      if(JSON.stringify(S.poses.get(p.id)) !== JSON.stringify(p)) willUpdate++;
+    } else willAdd++;
+  }
+  if(!willAdd && !willUpdate){ toast("Nothing new in that file — already up to date"); return; }
+  const msg = `Merge this file in?\n\n`
+            + `${willAdd} new pose${willAdd===1?"":"s"} will be added.\n`
+            + `${willUpdate} existing pose${willUpdate===1?"":"s"} will be updated.\n\n`
+            + `Nothing will be deleted. Your other poses stay exactly as they are.`;
+  if(!confirm(msg)){ toast("Merge cancelled — nothing changed"); return; }
+
+  $("#loading").style.display = "grid";
+  $("#loadMsg").textContent = "Merging…";
+  let n = 0;
+  for(const p of data.poses){
+    n++; $("#loadMsg").textContent = `Merging pose ${n} of ${data.poses.length}…`;
+    p.crop ||= {s:1,x:0,y:0}; p.tags ||= [1,2,3,4];
+    S.poses.set(p.id, p);
+    imgCache.delete(p.id);
+    await savePose(p);
+    if(!S.meta.order.includes(p.id)) S.meta.order.push(p.id);
+  }
+  // Merge wheel membership too, without dropping existing wheels
+  for(const iw of (data.meta.wheels||[])){
+    const mine = S.meta.wheels.find(w=>w.id===iw.id || w.name===iw.name);
+    if(mine){
+      for(const pid of iw.poseIds) if(!mine.poseIds.includes(pid)) mine.poseIds.push(pid);
+    } else {
+      S.meta.wheels.push(iw);
+    }
+  }
+  await saveMeta(true);
+  syncSettingsUI(); refreshAll();
+  $("#loading").style.display = "none";
+  toast(`Merged ✓ ${willAdd} added, ${willUpdate} updated`);
+});
+$("#importBtn").addEventListener("click", ()=>$("#importFile").click());
+$("#importFile").addEventListener("change", async e=>{
+  const f = e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  let data;
+  try{ data = JSON.parse(await f.text()); }catch(err){ toast("That file isn't a valid backup"); return; }
+  if(!data || data.app!=="pose-wheel" || !data.meta || !Array.isArray(data.poses)){
+    toast("That file isn't a Pose Wheel backup"); return;
+  }
+  const msg = `This will ERASE everything currently in the app and replace it `
+            + `with the ${data.poses.length} poses from this file.\n\n`
+            + `Your current data will be gone unless you've exported it.\n\n`
+            + `Continue and replace everything?`;
+  if(!confirm(msg)) { toast("Import cancelled — nothing changed"); return; }
+  $("#loading").style.display = "grid";
+  $("#loadMsg").textContent = "Importing…";
+  for(const k of await store.list("pose:")) await store.del(k);
+  S.poses.clear(); imgCache.clear();
+  S.meta = data.meta;
+  S.meta.settings = Object.assign({...DEFAULT_SETTINGS}, S.meta.settings||{});
+  S.meta.wheels ||= []; S.meta.fair ||= {};
+  S.meta.activeWheel ||= "all"; S.meta.filter ||= "1";
+  if(S.meta.filter === "all") S.meta.filter = "1";
+  let n = 0;
+  for(const p of data.poses){
+    n++; $("#loadMsg").textContent = `Importing pose ${n} of ${data.poses.length}…`;
+    p.crop ||= {s:1,x:0,y:0}; p.tags ||= [1,2,3,4];
+    S.poses.set(p.id, p);
+    await savePose(p);
+  }
+  S.meta.order = (S.meta.order||[]).filter(id=>S.poses.has(id));
+  for(const id of S.poses.keys()) if(!S.meta.order.includes(id)) S.meta.order.push(id);
+  await saveMeta(true);
+  syncSettingsUI(); refreshAll();
+  $("#loading").style.display = "none";
+  toast("Backup imported ✓");
+});
+$("#wipeBtn").addEventListener("click", async ()=>{
+  if(!confirm("Delete ALL poses, wheels, photos, and settings? Export a backup first if you're not sure.")) return;
+  $("#loading").style.display = "grid";
+  $("#loadMsg").textContent = "Deleting…";
+  for(const k of await store.list("pose:")) await store.del(k);
+  await store.del("meta");
+  S.poses.clear(); imgCache.clear();
+  const seed = seedData();
+  S.meta = seed.meta;
+  for(const p of seed.poses){ S.poses.set(p.id, p); await savePose(p); }
+  await saveMeta(true);
+  syncSettingsUI(); refreshAll();
+  $("#loading").style.display = "none";
+  toast("Fresh start");
+});
+
+/* =============================================================
+   TABS + PRESENT MODE
+   ============================================================= */
+$$("nav button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    $$("nav button").forEach(x=>x.classList.toggle("on", x===b));
+    $$("main > section").forEach(s=>s.classList.toggle("on", s.id === "view-"+b.dataset.view));
+    if(b.dataset.view === "play") requestAnimationFrame(resizeWheel);
+    if(b.dataset.view === "library") renderPoseList();
+    if(b.dataset.view === "wheels") renderWheels();
+  });
+});
+let wakeLock = null;
+$("#presentBtn").addEventListener("click", async ()=>{
+  $$("nav button").forEach(x=>x.classList.toggle("on", x.dataset.view==="play"));
+  $$("main > section").forEach(s=>s.classList.toggle("on", s.id === "view-play"));
+  document.body.classList.add("present");
+  try{ await document.documentElement.requestFullscreen?.(); }catch(e){}
+  try{ wakeLock = await navigator.wakeLock?.request("screen"); }catch(e){}
+  requestAnimationFrame(resizeWheel);
+});
+$("#exitPresent").addEventListener("click", async ()=>{
+  document.body.classList.remove("present");
+  try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
+  try{ wakeLock?.release(); wakeLock = null; }catch(e){}
+  requestAnimationFrame(resizeWheel);
+});
+
+/* =============================================================
+   INIT
+   ============================================================= */
+function refreshAll(){
+  renderWheelSel();
+  setFilterChips();
+  renderPoseList();
+  renderWheels();
+  renderLastBar();
+  preloadImages([...S.poses.values()]);
+  computePool();
+  requestDraw();
+}
+(async function init(){
+  try{
+    await loadAll();
+  }catch(e){
+    console.error(e);
+    $("#loadMsg").textContent = "Something went wrong loading — starting fresh.";
+    const seed = seedData(); S.meta = seed.meta;
+    seed.poses.forEach(p=>S.poses.set(p.id,p));
+  }
+  buildSwatches();
+  syncSettingsUI();
+  refreshAll();
+  resizeWheel();
+  window.addEventListener("resize", ()=>requestAnimationFrame(resizeWheel));
+  window.addEventListener("orientationchange", ()=>setTimeout(resizeWheel, 250));
+  document.body.addEventListener("pointerdown", ()=>audio(), {once:true, capture:true});
+  if("serviceWorker" in navigator && location.protocol === "https:"){
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
+  $("#loading").style.display = "none";
+})();
+</script>
+</body>
+</html>
